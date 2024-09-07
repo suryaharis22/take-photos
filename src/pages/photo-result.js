@@ -1,0 +1,43 @@
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+
+const PhotoResult = () => {
+    const [photos, setPhotos] = useState([]);
+    const router = useRouter();
+
+    useEffect(() => {
+        const storedPhotos = localStorage.getItem("capturedPhotos");
+        if (storedPhotos) {
+            setPhotos(JSON.parse(storedPhotos)); // Mengambil foto dari localStorage
+        }
+    }, []);
+
+    return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+            <h1 className="text-2xl font-bold mb-6 text-center">Hasil Foto</h1>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {photos.map((photo, index) => (
+                    <div
+                        key={index}
+                        className="w-full max-w-md rounded-lg shadow-lg overflow-hidden bg-white"
+                    >
+                        <img src={photo} alt={`Hasil Foto ${index + 1}`} className="w-full object-cover" />
+                    </div>
+                ))}
+            </div>
+
+            <button
+                onClick={() => {
+                    localStorage.clear();
+                    router.push("/");
+                }}
+                className="mt-6 bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
+            >
+                Kembali ke Kamera
+            </button>
+        </div >
+    );
+};
+
+export default PhotoResult;
