@@ -123,6 +123,8 @@ const CameraPage = () => {
   useEffect(() => {
     if (selectedDeviceId) {
       startVideo(selectedDeviceId);
+    } else if (devices.length > 0) {
+      setSelectedDeviceId(devices[0].deviceId); // Default to first device
     }
 
     return () => {
@@ -130,7 +132,7 @@ const CameraPage = () => {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [selectedDeviceId, facingMode]);
+  }, [selectedDeviceId, facingMode, devices]);
 
   return (
     <div className="container mx-auto p-4">
