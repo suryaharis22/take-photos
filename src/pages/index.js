@@ -56,7 +56,7 @@ const CameraPage = () => {
 
       // Start countdown after video is ready
       setTimeout(() => {
-        startCountdown(3);
+        startCountdown(5);
       }, 1000);
 
     } catch (err) {
@@ -154,21 +154,25 @@ const CameraPage = () => {
               )}
             </div>
             <div className="mt-4 flex flex-col items-center">
-              <select
-                id="camera-select"
-                className="bg-gray-200 border border-gray-300 rounded-md p-2"
-                onChange={handleCameraChange}
-                value={selectedCamera}
-              >
-                {cameraDevices.map((device, index) => (
-                  <option key={index} value={device.deviceId}>
-                    {device.label || `Camera ${index + 1}`}
-                  </option>
-                ))}
-              </select>
+
+
             </div>
           </>
         )}
+      </div>
+      <div className="relative flex flex-col items-center">
+        <select
+          id="camera-select"
+          className="bg-gray-200 border border-gray-300 rounded-md p-2"
+          onChange={handleCameraChange}
+          value={selectedCamera}
+        >
+          {cameraDevices.map((device, index) => (
+            <option key={index} value={device.deviceId}>
+              {device.label || `Camera ${index + 1}`}
+            </option>
+          ))}
+        </select>
       </div>
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
