@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 const CameraPage = () => {
   const [videoSrc, setVideoSrc] = useState(null);
   const [stream, setStream] = useState(null);
-  const [facingMode, setFacingMode] = useState('user'); // 'user' for front, 'environment' for back
+  const [facingMode, setFacingMode] = useState('environment'); // Set default to back camera
   const [error, setError] = useState(null); // State for handling errors
   const [countdown, setCountdown] = useState(null); // State for countdown
   const [loading, setLoading] = useState(false); // State for loading
@@ -36,7 +36,7 @@ const CameraPage = () => {
   const startVideo = async () => {
     try {
       const newStream = await navigator.mediaDevices.getUserMedia({
-        video: { deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined }
+        video: { deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined, facingMode: facingMode }
       });
       setStream(newStream);
       if (videoRef.current) {
@@ -105,9 +105,8 @@ const CameraPage = () => {
     setSelectedDeviceId(event.target.value);
   };
 
-  const switchCamera = () => {
-    // Toggle between front and back cameras
-    setFacingMode((prevMode) => (prevMode === 'user' ? 'environment' : 'user'));
+  const handleFacingModeChange = (event) => {
+    setFacingMode(event.target.value);
   };
 
   useEffect(() => {
@@ -168,21 +167,22 @@ const CameraPage = () => {
                   </option>
                 ))}
               </select>
-              <button onClick={switchCamera} className="bg-green-500 text-white py-2 px-4 rounded transition-transform duration-300 transform hover:scale-105">
-                Ganti Kamera
-              </button>
+              <select value={facingMode} onChange={handleFacingModeChange} className="bg-gray-200 border border-gray-300 rounded p-2 mb-4">
+                <option value="environment">Kamera Belakang</option>
+                <option value="user">Kamera Depan</option>
+              </select>
             </div>
           </>
         )}
       </div>
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 h-screen">
-          <div role="status" className="flex flex-col items-center">
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div role="status" className="flex flex-col items-center w-[">
             <svg aria-hidden="true" className="w-52 h-50 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor" />
-              <path d="M93.9758 50.5908C93.9758 73.7012 76.1266 91.5494 50 91.5494C32.9782 91.5494 18.9075 81.7733 12.6651 67.5847L20.9187 60.2268C24.7468 71.8651 35.2156 79.4641 50 79.4641C71.7657 79.4641 87.4304 62.1542 87.4304 50.5908C87.4304 39.0274 71.7657 21.7175 50 21.7175C34.3415 21.7175 22.3077 27.1437 14.9736 36.4292L6.59751 29.1023C10.3297 22.2854 26.309 9.88553 50 9.88553C77.761 9.88553 93.9758 29.5377 93.9758 50.5908Z" fill="#0F4C81" />
+              <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill" />
             </svg>
-            <p className="text-white mt-2">Loading...</p>
+            <span className="sr-only">Loading...</span>
           </div>
         </div>
       )}
