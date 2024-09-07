@@ -5,12 +5,12 @@ import { motion } from 'framer-motion';
 const CameraPage = () => {
   const [videoSrc, setVideoSrc] = useState(null);
   const [stream, setStream] = useState(null);
-  const [facingMode, setFacingMode] = useState('environment'); // Set default to back camera
-  const [error, setError] = useState(null); // State for handling errors
-  const [countdown, setCountdown] = useState(null); // State for countdown
-  const [loading, setLoading] = useState(false); // State for loading
-  const [devices, setDevices] = useState([]); // State for camera devices
-  const [selectedDeviceId, setSelectedDeviceId] = useState(''); // State for selected device ID
+  const [facingMode, setFacingMode] = useState('environment'); // Default to back camera
+  const [error, setError] = useState(null);
+  const [countdown, setCountdown] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [devices, setDevices] = useState([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState('');
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const router = useRouter();
@@ -22,10 +22,9 @@ const CameraPage = () => {
       const videoDevices = devices.filter(device => device.kind === 'videoinput');
       setDevices(videoDevices);
 
-      // Set the first device as the default selected device if available
-      if (videoDevices.length > 0) {
-        setSelectedDeviceId(videoDevices[0].deviceId);
-      }
+      // Set the default camera device ID based on facingMode
+      const defaultDevice = videoDevices.find(device => device.label.includes('back')) || videoDevices[0];
+      setSelectedDeviceId(defaultDevice ? defaultDevice.deviceId : '');
     } catch (err) {
       console.error('Error getting devices: ', err);
       setError('Tidak dapat mengakses perangkat kamera. Pastikan perangkat kamera terhubung dengan benar.');
@@ -48,12 +47,12 @@ const CameraPage = () => {
         videoRef.current.srcObject = newStream;
         videoRef.current.play();
       }
-      setError(null); // Clear any previous errors
+      setError(null);
 
       // Start countdown after video is ready
       setTimeout(() => {
-        startCountdown(3); // Start countdown from 3 seconds
-      }, 1000); // Delay to ensure video is loaded
+        startCountdown(3);
+      }, 1000);
 
     } catch (err) {
       console.error('Error accessing camera: ', err);
@@ -75,7 +74,7 @@ const CameraPage = () => {
       if (newTimeRemaining > 0) {
         requestAnimationFrame(step);
       } else {
-        capturePhoto(); // Capture photo when countdown finishes
+        capturePhoto();
       }
     };
 
@@ -95,14 +94,12 @@ const CameraPage = () => {
       const photoURL = canvas.toDataURL('image/jpeg');
       setVideoSrc(photoURL);
 
-      // Save the single photo to localStorage
       localStorage.setItem('capturedPhotos', JSON.stringify([photoURL]));
 
-      // Set loading state and redirect after 5 seconds
       setLoading(true);
       setTimeout(() => {
         router.push('/photo-result');
-      }, 5000); // 5 seconds delay
+      }, 5000);
     }
   };
 
@@ -123,16 +120,15 @@ const CameraPage = () => {
   useEffect(() => {
     if (selectedDeviceId) {
       startVideo(selectedDeviceId);
-    } else if (devices.length > 0) {
-      setSelectedDeviceId(devices[0].deviceId); // Default to first device
     }
+  }, [selectedDeviceId, facingMode]);
 
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, [selectedDeviceId, facingMode, devices]);
+  useEffect(() => {
+    // Set default device when devices are available
+    if (devices.length > 0 && !selectedDeviceId) {
+      setSelectedDeviceId(devices[0].deviceId); // Default to the first device
+    }
+  }, [devices]);
 
   return (
     <div className="container mx-auto p-4">
