@@ -5,12 +5,11 @@ import { motion } from 'framer-motion';
 const CameraPage = () => {
   const [videoSrc, setVideoSrc] = useState(null);
   const [stream, setStream] = useState(null);
-  const [facingMode, setFacingMode] = useState('environment'); // Default to back camera
   const [error, setError] = useState(null);
   const [countdown, setCountdown] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [devices, setDevices] = useState([]);
-  const [selectedDeviceId, setSelectedDeviceId] = useState('');
+  const [cameraDevices, setCameraDevices] = useState([]);
+  const [selectedCamera, setSelectedCamera] = useState('');
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const router = useRouter();
@@ -20,11 +19,17 @@ const CameraPage = () => {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter(device => device.kind === 'videoinput');
-      setDevices(videoDevices);
+      setCameraDevices(videoDevices);
 
-      // Set the default camera device ID based on facingMode
-      const defaultDevice = videoDevices.find(device => device.label.toLowerCase().includes(facingMode)) || videoDevices[0];
-      setSelectedDeviceId(defaultDevice ? defaultDevice.deviceId : '');
+      // Prioritize rear camera, fallback to front camera if rear is not found
+      const rearCamera = videoDevices.find(device => device.label.toLowerCase().includes('rear'));
+      const frontCamera = videoDevices.find(device => device.label.toLowerCase().includes('front')) || videoDevices[0];
+
+      if (rearCamera) {
+        setSelectedCamera(rearCamera.deviceId);
+      } else {
+        setSelectedCamera(frontCamera.deviceId);
+      }
     } catch (err) {
       console.error('Error getting devices: ', err);
       setError('Tidak dapat mengakses perangkat kamera. Pastikan perangkat kamera terhubung dengan benar.');
@@ -40,7 +45,7 @@ const CameraPage = () => {
       }
 
       const newStream = await navigator.mediaDevices.getUserMedia({
-        video: { deviceId: deviceId ? { exact: deviceId } : undefined, facingMode: facingMode }
+        video: { deviceId: deviceId ? { exact: deviceId } : undefined }
       });
       setStream(newStream);
       if (videoRef.current) {
@@ -94,23 +99,21 @@ const CameraPage = () => {
       const photoURL = canvas.toDataURL('image/jpeg');
       setVideoSrc(photoURL);
 
-      localStorage.setItem('capturedPhotos', JSON.stringify([photoURL]));
+      const existingPhotos = JSON.parse(localStorage.getItem('capturedPhotos')) || [];
+      localStorage.setItem('capturedPhotos', JSON.stringify([...existingPhotos, photoURL]));
 
       setLoading(true);
       setTimeout(() => {
         router.push('/photo-result');
       }, 5000);
+    } else {
+      setError('Gagal menangkap foto. Pastikan kamera terhubung dengan benar.');
     }
   };
 
-  // Function to handle device change
-  const handleDeviceChange = (event) => {
-    setSelectedDeviceId(event.target.value);
-  };
-
-  // Function to handle facing mode change
-  const handleFacingModeChange = (event) => {
-    setFacingMode(event.target.value);
+  // Function to handle camera change
+  const handleCameraChange = (event) => {
+    setSelectedCamera(event.target.value);
   };
 
   useEffect(() => {
@@ -118,17 +121,10 @@ const CameraPage = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedDeviceId) {
-      startVideo(selectedDeviceId);
+    if (selectedCamera) {
+      startVideo(selectedCamera);
     }
-  }, [selectedDeviceId, facingMode]);
-
-  useEffect(() => {
-    // Set default device when devices are available
-    if (devices.length > 0 && !selectedDeviceId) {
-      setSelectedDeviceId(devices[0].deviceId); // Default to the first device
-    }
-  }, [devices]);
+  }, [selectedCamera]);
 
   return (
     <div className="container mx-auto p-4">
@@ -137,7 +133,7 @@ const CameraPage = () => {
         {error ? (
           <div className="text-red-500 mb-4 text-center">
             <p>{error}</p>
-            <button onClick={() => startVideo(selectedDeviceId)} className="mt-4 bg-yellow-500 text-white py-2 px-4 rounded transition-transform duration-300 transform hover:scale-105">
+            <button onClick={() => startVideo(selectedCamera)} className="mt-4 bg-yellow-500 text-white py-2 px-4 rounded transition-transform duration-300 transform hover:scale-105">
               Coba Lagi
             </button>
           </div>
@@ -158,30 +154,18 @@ const CameraPage = () => {
               )}
             </div>
             <div className="mt-4 flex flex-col items-center">
-              {/* Ensure dropdown is visible and accessible */}
-              <div className="relative">
-                <select
-                  value={selectedDeviceId}
-                  onChange={handleDeviceChange}
-                  className="bg-gray-200 border border-gray-300 rounded p-2 mb-4 z-10"
-                >
-                  {devices.map(device => (
-                    <option key={device.deviceId} value={device.deviceId}>
-                      {device.label || `Camera ${devices.indexOf(device) + 1}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="relative">
-                <select
-                  value={facingMode}
-                  onChange={handleFacingModeChange}
-                  className="bg-gray-200 border border-gray-300 rounded p-2 mb-4 z-10"
-                >
-                  <option value="environment">Kamera Belakang</option>
-                  <option value="user">Kamera Depan</option>
-                </select>
-              </div>
+              <select
+                id="camera-select"
+                className="bg-gray-200 border border-gray-300 rounded-md p-2"
+                onChange={handleCameraChange}
+                value={selectedCamera}
+              >
+                {cameraDevices.map((device, index) => (
+                  <option key={index} value={device.deviceId}>
+                    {device.label || `Camera ${index + 1}`}
+                  </option>
+                ))}
+              </select>
             </div>
           </>
         )}
