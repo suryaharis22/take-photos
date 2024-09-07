@@ -166,6 +166,11 @@ const CameraPage = () => {
                                     </option>
                                 ))}
                             </select>
+                            {cameraDevices.map((device, index) => (
+                                <p key={index}>{device.label || `Camera ${index + 1}`}</p>
+                            ))}
+
+
                         </div>
                     </>
                 )}
