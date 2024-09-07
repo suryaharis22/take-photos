@@ -158,17 +158,30 @@ const CameraPage = () => {
               )}
             </div>
             <div className="mt-4 flex flex-col items-center">
-              <select value={selectedDeviceId} onChange={handleDeviceChange} className="bg-gray-200 border border-gray-300 rounded p-2 mb-4">
-                {devices.map(device => (
-                  <option key={device.deviceId} value={device.deviceId}>
-                    {device.label || `Camera ${devices.indexOf(device) + 1}`}
-                  </option>
-                ))}
-              </select>
-              <select value={facingMode} onChange={handleFacingModeChange} className="bg-gray-200 border border-gray-300 rounded p-2 mb-4">
-                <option value="environment">Kamera Belakang</option>
-                <option value="user">Kamera Depan</option>
-              </select>
+              {/* Ensure dropdown is visible and accessible */}
+              <div className="relative">
+                <select
+                  value={selectedDeviceId}
+                  onChange={handleDeviceChange}
+                  className="bg-gray-200 border border-gray-300 rounded p-2 mb-4 z-10"
+                >
+                  {devices.map(device => (
+                    <option key={device.deviceId} value={device.deviceId}>
+                      {device.label || `Camera ${devices.indexOf(device) + 1}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="relative">
+                <select
+                  value={facingMode}
+                  onChange={handleFacingModeChange}
+                  className="bg-gray-200 border border-gray-300 rounded p-2 mb-4 z-10"
+                >
+                  <option value="environment">Kamera Belakang</option>
+                  <option value="user">Kamera Depan</option>
+                </select>
+              </div>
             </div>
           </>
         )}
