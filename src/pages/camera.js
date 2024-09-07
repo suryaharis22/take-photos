@@ -97,9 +97,9 @@ const CameraPage = () => {
             localStorage.setItem('capturedPhotos', JSON.stringify([photoURL]));
 
             setLoading(true);
-            setTimeout(() => {
-                router.push('/photo-result');
-            }, 5000);
+            // setTimeout(() => {
+            //     router.push('/photo-result');
+            // }, 5000);
         }
     };
 

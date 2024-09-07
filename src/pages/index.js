@@ -23,7 +23,7 @@ const CameraPage = () => {
       setDevices(videoDevices);
 
       // Set the default camera device ID based on facingMode
-      const defaultDevice = videoDevices.find(device => device.label.includes('back')) || videoDevices[0];
+      const defaultDevice = videoDevices.find(device => device.label.toLowerCase().includes(facingMode)) || videoDevices[0];
       setSelectedDeviceId(defaultDevice ? defaultDevice.deviceId : '');
     } catch (err) {
       console.error('Error getting devices: ', err);
