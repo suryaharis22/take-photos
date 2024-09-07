@@ -22,7 +22,7 @@ const CameraPage = () => {
       const videoDevices = devices.filter(device => device.kind === 'videoinput');
       setDevices(videoDevices);
 
-      // Set the first device as the default selected device
+      // Set the first device as the default selected device if available
       if (videoDevices.length > 0) {
         setSelectedDeviceId(videoDevices[0].deviceId);
       }
@@ -33,10 +33,15 @@ const CameraPage = () => {
   };
 
   // Function to start the video stream
-  const startVideo = async () => {
+  const startVideo = async (deviceId) => {
     try {
+      // Stop previous stream if exists
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+
       const newStream = await navigator.mediaDevices.getUserMedia({
-        video: { deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined, facingMode: facingMode }
+        video: { deviceId: deviceId ? { exact: deviceId } : undefined, facingMode: facingMode }
       });
       setStream(newStream);
       if (videoRef.current) {
@@ -101,10 +106,12 @@ const CameraPage = () => {
     }
   };
 
+  // Function to handle device change
   const handleDeviceChange = (event) => {
     setSelectedDeviceId(event.target.value);
   };
 
+  // Function to handle facing mode change
   const handleFacingModeChange = (event) => {
     setFacingMode(event.target.value);
   };
@@ -115,7 +122,7 @@ const CameraPage = () => {
 
   useEffect(() => {
     if (selectedDeviceId) {
-      startVideo();
+      startVideo(selectedDeviceId);
     }
 
     return () => {
@@ -123,14 +130,7 @@ const CameraPage = () => {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [selectedDeviceId]);
-
-  useEffect(() => {
-    // Restart video stream when facingMode changes
-    if (selectedDeviceId) {
-      startVideo();
-    }
-  }, [facingMode]);
+  }, [selectedDeviceId, facingMode]);
 
   return (
     <div className="container mx-auto p-4">
@@ -139,7 +139,7 @@ const CameraPage = () => {
         {error ? (
           <div className="text-red-500 mb-4 text-center">
             <p>{error}</p>
-            <button onClick={() => startVideo()} className="mt-4 bg-yellow-500 text-white py-2 px-4 rounded transition-transform duration-300 transform hover:scale-105">
+            <button onClick={() => startVideo(selectedDeviceId)} className="mt-4 bg-yellow-500 text-white py-2 px-4 rounded transition-transform duration-300 transform hover:scale-105">
               Coba Lagi
             </button>
           </div>
