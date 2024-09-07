@@ -1,4 +1,5 @@
-import ButonTake from "@/components/butonTake";
+import ButonTake from "@/components/ButonTake";
+
 
 const Cam1 = () => {
     return (
