@@ -1,11 +1,24 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 
+const getDevicesList = async () => {
+    const mediaDevices = await navigator.mediaDevices.enumerateDevices();
+    return mediaDevices.filter(device => device.kind === 'videoinput');
+};
+
+const startMediaStream = async (deviceId, facingMode, stream) => {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+    return await navigator.mediaDevices.getUserMedia({
+        video: { deviceId: deviceId ? { exact: deviceId } : undefined, facingMode },
+    });
+};
+
 const CameraPage = () => {
-    const [videoSrc, setVideoSrc] = useState(null);
     const [stream, setStream] = useState(null);
-    const [facingMode, setFacingMode] = useState('environment'); // Default to back camera
+    const [facingMode, setFacingMode] = useState('environment');
     const [error, setError] = useState(null);
     const [countdown, setCountdown] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -15,63 +28,35 @@ const CameraPage = () => {
     const canvasRef = useRef(null);
     const router = useRouter();
 
-    // Function to get the list of video input devices
-    const getDevices = async () => {
+    // Fungsi untuk mulai video dan memulai countdown
+    const startVideo = useCallback(async () => {
         try {
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const videoDevices = devices.filter(device => device.kind === 'videoinput');
-            setDevices(videoDevices);
-
-            // Set the default camera device ID based on facingMode
-            const defaultDevice = videoDevices.find(device => device.label.includes('back')) || videoDevices[0];
-            setSelectedDeviceId(defaultDevice ? defaultDevice.deviceId : '');
-        } catch (err) {
-            console.error('Error getting devices: ', err);
-            setError('Tidak dapat mengakses perangkat kamera. Pastikan perangkat kamera terhubung dengan benar.');
-        }
-    };
-
-    // Function to start the video stream
-    const startVideo = async (deviceId) => {
-        try {
-            // Stop previous stream if exists
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
-
-            const newStream = await navigator.mediaDevices.getUserMedia({
-                video: { deviceId: deviceId ? { exact: deviceId } : undefined, facingMode: facingMode }
-            });
+            const newStream = await startMediaStream(selectedDeviceId, facingMode, stream);
             setStream(newStream);
+
             if (videoRef.current) {
                 videoRef.current.srcObject = newStream;
                 videoRef.current.play();
             }
+
             setError(null);
-
-            // Start countdown after video is ready
-            setTimeout(() => {
-                startCountdown(3);
-            }, 1000);
-
+            startCountdown(3);
         } catch (err) {
-            console.error('Error accessing camera: ', err);
-            setError('Tidak dapat mengakses kamera. Pastikan kamera diaktifkan dan izinkan akses kamera. Jika akses kamera telah ditolak, Anda mungkin perlu mengatur ulang izin browser.');
+            setError('Tidak dapat mengakses kamera. Pastikan izinkan akses kamera di browser.');
         }
-    };
+    }, [selectedDeviceId, facingMode, stream]);
 
-    // Function to start countdown smoothly
-    const startCountdown = (duration) => {
-        let start = null;
-        let timeRemaining = duration;
+    // Fungsi untuk memulai countdown
+    const startCountdown = useCallback((duration) => {
+        let startTime = null;
 
         const step = (timestamp) => {
-            if (!start) start = timestamp;
-            const elapsed = (timestamp - start) / 1000;
-            const newTimeRemaining = Math.max(duration - Math.floor(elapsed), 0);
-            setCountdown(newTimeRemaining);
+            if (!startTime) startTime = timestamp;
+            const elapsed = Math.floor((timestamp - startTime) / 1000);
+            const timeLeft = Math.max(duration - elapsed, 0);
+            setCountdown(timeLeft);
 
-            if (newTimeRemaining > 0) {
+            if (timeLeft > 0) {
                 requestAnimationFrame(step);
             } else {
                 capturePhoto();
@@ -79,10 +64,10 @@ const CameraPage = () => {
         };
 
         requestAnimationFrame(step);
-    };
+    }, []);
 
-    // Function to capture a photo and handle redirection
-    const capturePhoto = () => {
+    // Fungsi untuk menangkap foto
+    const capturePhoto = useCallback(() => {
         const canvas = canvasRef.current;
         const video = videoRef.current;
 
@@ -92,43 +77,40 @@ const CameraPage = () => {
             const context = canvas.getContext('2d');
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             const photoURL = canvas.toDataURL('image/jpeg');
-            setVideoSrc(photoURL);
 
             localStorage.setItem('capturedPhotos', JSON.stringify([photoURL]));
-
             setLoading(true);
-            setTimeout(() => {
-                router.push('/photo-result');
-            }, 5000);
+            setTimeout(() => router.push('/photo-result'), 5000);
         }
-    };
-
-    // Function to handle device change
-    const handleDeviceChange = (event) => {
-        setSelectedDeviceId(event.target.value);
-    };
-
-    // Function to handle facing mode change
-    const handleFacingModeChange = (event) => {
-        setFacingMode(event.target.value);
-    };
+    }, [router]);
 
     useEffect(() => {
-        getDevices();
-    }, []);
+        const fetchDevices = async () => {
+            try {
+                const videoDevices = await getDevicesList();
+                setDevices(videoDevices);
+                const defaultDevice = videoDevices.find(device => device.label.includes('back')) || videoDevices[0];
+                setSelectedDeviceId(defaultDevice ? defaultDevice.deviceId : '');
+            } catch {
+                setError('Tidak dapat mengakses perangkat kamera.');
+            }
+        };
 
+        fetchDevices();
+
+        return () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        };
+    }, [stream]);
+
+    // Memulai video saat `selectedDeviceId` atau `facingMode` berubah
     useEffect(() => {
         if (selectedDeviceId) {
-            startVideo(selectedDeviceId);
+            startVideo();
         }
-    }, [selectedDeviceId, facingMode]);
-
-    useEffect(() => {
-        // Set default device when devices are available
-        if (devices.length > 0 && !selectedDeviceId) {
-            setSelectedDeviceId(devices[0].deviceId); // Default to the first device
-        }
-    }, [devices]);
+    }, [selectedDeviceId, facingMode, startVideo]);
 
     return (
         <div className="container mx-auto p-4">
@@ -137,7 +119,7 @@ const CameraPage = () => {
                 {error ? (
                     <div className="text-red-500 mb-4 text-center">
                         <p>{error}</p>
-                        <button onClick={() => startVideo(selectedDeviceId)} className="mt-4 bg-yellow-500 text-white py-2 px-4 rounded transition-transform duration-300 transform hover:scale-105">
+                        <button onClick={startVideo} className="mt-4 bg-yellow-500 text-white py-2 px-4 rounded transition-transform duration-300 transform hover:scale-105">
                             Coba Lagi
                         </button>
                     </div>
@@ -145,36 +127,39 @@ const CameraPage = () => {
                     <>
                         <video ref={videoRef} className="border border-gray-400 rounded-lg shadow-lg w-full max-w-md h-auto" autoPlay></video>
                         <canvas ref={canvasRef} className="hidden"></canvas>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            {countdown > 0 && (
-                                <motion.div
-                                    className="text-white text-6xl font-bold"
-                                    initial={{ scale: 1 }}
-                                    animate={{ scale: [1, 1.2, 1] }}
-                                    transition={{ duration: 1, repeat: Infinity }}
-                                >
-                                    {Math.ceil(countdown)}
-                                </motion.div>
-                            )}
-                        </div>
-
+                        {countdown > 0 && (
+                            <motion.div
+                                className="absolute inset-0 flex items-center justify-center text-white text-6xl font-bold"
+                                initial={{ scale: 1 }}
+                                animate={{ scale: [1, 1.2, 1] }}
+                                transition={{ duration: 1, repeat: Infinity }}
+                            >
+                                {countdown}
+                            </motion.div>
+                        )}
                     </>
                 )}
             </div>
-            <div className="relative flex flex-col items-center">
-                <div className="mt-4 flex flex-col items-center">
-                    <select value={selectedDeviceId} onChange={handleDeviceChange} className="bg-gray-200 border border-gray-300 rounded p-2 mb-4">
-                        {devices.map(device => (
-                            <option key={device.deviceId} value={device.deviceId}>
-                                {device.label || `Camera ${devices.indexOf(device) + 1}`}
-                            </option>
-                        ))}
-                    </select>
-                    <select value={facingMode} onChange={handleFacingModeChange} className="bg-gray-200 border border-gray-300 rounded p-2 mb-4">
-                        <option value="environment">Kamera Belakang</option>
-                        <option value="user">Kamera Depan</option>
-                    </select>
-                </div>
+            <div className="mt-4 flex flex-col items-center">
+                <select
+                    value={selectedDeviceId}
+                    onChange={e => setSelectedDeviceId(e.target.value)}
+                    className="bg-gray-200 border border-gray-300 rounded p-2 mb-4"
+                >
+                    {devices.map(device => (
+                        <option key={device.deviceId} value={device.deviceId}>
+                            {device.label || `Camera ${devices.indexOf(device) + 1}`}
+                        </option>
+                    ))}
+                </select>
+                <select
+                    value={facingMode}
+                    onChange={e => setFacingMode(e.target.value)}
+                    className="bg-gray-200 border border-gray-300 rounded p-2 mb-4"
+                >
+                    <option value="environment">Kamera Belakang</option>
+                    <option value="user">Kamera Depan</option>
+                </select>
             </div>
             {loading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
