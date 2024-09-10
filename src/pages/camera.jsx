@@ -30,6 +30,10 @@ const CameraPage = () => {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter(device => device.kind === 'videoinput');
+      if (videoDevices.length === 0) {
+        setError('Tidak ada perangkat kamera yang tersedia.');
+        return;
+      }
       setCameraDevices(videoDevices);
       setSelectedCamera(selectPreferredCamera(videoDevices));
     } catch (err) {
@@ -45,13 +49,19 @@ const CameraPage = () => {
 
   const startVideo = async (deviceId) => {
     try {
+      // Hentikan stream sebelumnya sebelum memulai yang baru
       stopStream();
-      const newStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } } });
+
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { deviceId: { exact: deviceId } }
+      });
+
       setStream(newStream);
       videoRef.current.srcObject = newStream;
-      setError(null);
-      startCountdown(5); // Restart countdown when starting video
+      setError(null); // Hapus error jika kamera berhasil diakses
+      startCountdown(5); // Restart countdown ketika video dimulai
     } catch (err) {
+      console.error('Error starting video: ', err);
       handleError('Tidak dapat mengakses kamera. Pastikan kamera diaktifkan dan izinkan akses kamera.');
     }
   };
