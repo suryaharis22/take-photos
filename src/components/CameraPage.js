@@ -52,7 +52,6 @@ const CameraPage = () => {
         setCountdown(5);
         countdownRef.current = setInterval(async () => {
             setCountdown((prev) => {
-                console.log(prev);
                 if (prev === 1) {
                     clearInterval(countdownRef.current);
                     countdownRef.current = null;

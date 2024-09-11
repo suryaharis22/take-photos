@@ -1,8 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
+import axios from 'axios';
+import Toast from '@/utils/Toast';
+import Swal from 'sweetalert2';
 
 const CameraPage = () => {
+  const router = useRouter();
   const [videoSrc, setVideoSrc] = useState(null);
   const [stream, setStream] = useState(null);
   const [error, setError] = useState(null);
@@ -13,7 +17,6 @@ const CameraPage = () => {
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const router = useRouter();
 
   useEffect(() => {
     getDevices();
@@ -95,18 +98,99 @@ const CameraPage = () => {
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     const photoURL = canvas.toDataURL('image/jpeg');
     savePhoto(photoURL);
-    redirectToResult();
+    // redirectToResult();
   };
 
   const savePhoto = (photoURL) => {
-    const existingPhotos = JSON.parse(localStorage.getItem('capturedPhotos')) || [];
-    localStorage.setItem('capturedPhotos', JSON.stringify([...existingPhotos, photoURL]));
-    setVideoSrc(photoURL);
+
+    // Convert photoURL to Blob
+    fetch(photoURL)
+      .then(res => res.blob())
+      .then(blob => {
+        let dataPhoto = new FormData();
+        dataPhoto.append('pictures', blob, 'photo.jpg');
+
+        axios.post(`${process.env.NEXT_PUBLIC_API_URL}scanner/scan-face`, dataPhoto, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          maxBodyLength: Infinity
+        })
+          .then(response => {
+
+            const existingPhotos = JSON.parse(localStorage.getItem('capturedPhotos')) || [];
+            localStorage.setItem('capturedPhotos', JSON.stringify([...existingPhotos, photoURL]));
+            // redirectToResult();
+            fetchMatchData();
+          })
+          .catch(error => {
+            // redirectToResult();
+            Swal.fire({
+              icon: 'error',
+              title: 'Gagal mendeteksi wajah. Silahkan coba lagi.',
+              timer: 3000,
+              showConfirmButton: false
+            }).then(() => {
+              startCountdown(5);
+            });
+          });
+
+        setVideoSrc(photoURL);
+      })
+      .catch(error => {
+      });
   };
 
-  const redirectToResult = () => {
+  // const redirectToResult = () => {
+  //   setLoading(true);
+  //   setTimeout(() => router.push('/photo-result'), 5000);
+  // };
+
+  const fetchMatchData = async () => {
     setLoading(true);
-    setTimeout(() => router.push('/photo-result'), 5000);
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}scanner/get-match`);
+
+      setLoading(false);
+
+
+      if (response.data.body.status === 'waiting') {
+        setTimeout(fetchMatchData, 3000);
+      } else if (response.data.body.status === 'success') {
+
+      } else if (response.data.body.status === 'failed') {
+
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal diproses. Silahkan coba lagi.',
+          showConfirmButton: true,
+          confirmButtonText: 'Scan again',
+          confirmButtonColor: '#3b82f5',
+          showCancelButton: true,
+          cancelButtonText: 'Back to home',
+          cancelButtonColor: '#ef4444',
+
+        }).then((result) => {
+          if (result.isConfirmed) {
+            startCountdown(5);
+          } else if (result.isDismissed) {
+            router.push('/');
+          }
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching match data:', error);
+      setLoading(false);
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal diproses. Silahkan coba lagi.',
+        timer: 3000,
+        showConfirmButton: false
+      }).then(() => {
+        router.push('/');
+      })
+
+    }
   };
 
   const handleError = (message) => {
