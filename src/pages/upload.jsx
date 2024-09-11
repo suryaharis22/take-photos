@@ -26,7 +26,8 @@ const Upload = () => {
         const promises = images.map(async (imageUrl, index) => {
             const response = await fetch(imageUrl);
             const blob = await response.blob();
-            formData.append('pictures', blob, `image-${index}.jpg`);
+            const uniqueName = `image-${Date.now()}-${Math.floor(Math.random() * 10000)}.jpg`;
+            formData.append('image', blob, uniqueName);
         });
 
         setLoading(true);
@@ -34,7 +35,7 @@ const Upload = () => {
         try {
             await Promise.all(promises);
 
-            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}picture/upload-pictures`, formData, {
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL_NGROK}upload_images`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }

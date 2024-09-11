@@ -1,16 +1,32 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
+import axios from "axios";
 
 const PhotoResult = () => {
     const [photos, setPhotos] = useState([]);
     const router = useRouter();
 
+    // useEffect(() => {
+    //     const storedPhotos = localStorage.getItem("capturedPhotos");
+    //     if (storedPhotos) {
+    //         setPhotos(JSON.parse(storedPhotos)); // Mengambil foto dari localStorage
+    //     }
+    // }, []);
+
     useEffect(() => {
-        const storedPhotos = localStorage.getItem("capturedPhotos");
-        if (storedPhotos) {
-            setPhotos(JSON.parse(storedPhotos)); // Mengambil foto dari localStorage
-        }
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL_NGROK}get_matched_images`, {
+            headers: {
+                "ngrok-skip-browser-warning": "69420"
+            }
+        })
+            .then(response => {
+                console.log(response.data);
+                setPhotos(response.data.matched_images)
+            })
+            .catch(error => {
+                console.error(error);
+            });
     }, []);
 
     return (
@@ -18,7 +34,7 @@ const PhotoResult = () => {
             <h1 className="text-2xl font-bold mb-6 text-center">Hasil Foto</h1>
 
             <div className="flex flex-wrap justify-center gap-4">
-                {photos.map((photo, index) => (
+                {photos?.map((photo, index) => (
                     <motion.div
                         key={index}
                         className="w-full max-w-xs rounded-lg shadow-lg overflow-hidden bg-white"
@@ -26,7 +42,7 @@ const PhotoResult = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
                     >
-                        <img src={photo} alt={`Hasil Foto ${index + 1}`} className="w-full object-cover" />
+                        <img src={`https://fea3-2404-8000-1095-10a2-8968-b9aa-4be8-4e51.ngrok-free.app//matched_image//${photo}`} alt={`Hasil Foto ${index + 1}`} className="w-full object-cover" />
                     </motion.div>
                 ))}
             </div>
