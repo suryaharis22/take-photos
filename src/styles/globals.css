@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* Menghilangkan scrollbar secara global untuk elemen overflow */
+html, body {
+  overflow: hidden;
+}
+
+::-webkit-scrollbar {
+  display: none;
+  /* Menghilangkan scrollbar di browser berbasis WebKit (Chrome, Safari, dll.) */
+}
+
+/* Jika perlu untuk browser lain, gunakan properti berikut */
+* {
+  scrollbar-width: none;
+  /* Menghilangkan scrollbar di Firefox */
+  -ms-overflow-style: none;
+  /* Menghilangkan scrollbar di Internet Explorer */
+}
+
+/* :root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+} */
