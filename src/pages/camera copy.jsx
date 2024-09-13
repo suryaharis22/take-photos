@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import Toast from '@/utils/Toast';
 import Swal from 'sweetalert2';
 
 const CameraPage = () => {
@@ -52,26 +51,34 @@ const CameraPage = () => {
 
   const startVideo = async (deviceId) => {
     try {
-      // Hentikan stream sebelumnya sebelum memulai yang baru
-      stopStream();
+      // stopStream();
 
-      const newStream = await navigator.mediaDevices.getUserMedia({
+      const constraints = {
         video: { deviceId: { exact: deviceId } }
-      });
+      };
 
-      setStream(newStream);
-      videoRef.current.srcObject = newStream;
-      setError(null); // Hapus error jika kamera berhasil diakses
-      startCountdown(5); // Restart countdown ketika video dimulai
+      // Request user media
+      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+      // Set the stream to videoRef
+      if (videoRef.current) {
+        videoRef.current.srcObject = newStream;
+        setStream(newStream);
+        setError(null); // Clear any previous error
+        startCountdown(5); // Restart countdown when video starts
+      } else {
+        handleError('Video element tidak ditemukan.');
+      }
     } catch (err) {
       console.error('Error starting video: ', err);
-      handleError('Tidak dapat mengakses kamera. Pastikan kamera diaktifkan dan izinkan akses kamera.');
+      handleError(`Tidak dapat mengakses kamera. Pastikan kamera diaktifkan dan izinkan akses kamera.${err}`);
     }
   };
 
   const stopStream = () => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
+      setStream(null);
     }
   };
 
@@ -101,26 +108,23 @@ const CameraPage = () => {
   };
 
   const savePhoto = (photoURL) => {
-
-    // Convert photoURL to Blob
     fetch(photoURL)
       .then(res => res.blob())
       .then(blob => {
         let dataPhoto = new FormData();
-        dataPhoto.append('pictures', blob, 'photo.jpg');
+        const uniqueName = `${Date.now()}${Math.floor(Math.random() * 10000)}.jpg`;
+        dataPhoto.append('image', blob, uniqueName);
 
-        axios.post(`${process.env.NEXT_PUBLIC_API_URL}scanner/scan-face`, dataPhoto, {
+        axios.post(`${process.env.NEXT_PUBLIC_API_URL_NGROK}upload_compare`, dataPhoto, {
           headers: {
             'Content-Type': 'multipart/form-data'
           },
           maxBodyLength: Infinity
         })
           .then(response => {
-
             const existingPhotos = JSON.parse(localStorage.getItem('capturedPhotos')) || [];
             localStorage.setItem('capturedPhotos', JSON.stringify([...existingPhotos, photoURL]));
             redirectToResult();
-            // fetchMatchData();
           })
           .catch(error => {
             Swal.fire({
@@ -136,29 +140,20 @@ const CameraPage = () => {
         setVideoSrc(photoURL);
       })
       .catch(error => {
+        handleError('Gagal menyimpan foto.');
       });
   };
 
   const redirectToResult = () => {
     setLoading(true);
-
-    setTimeout(() => router.push('/photo-result'), 5000);
-  };
-
-  const fetchMatchData = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}scanner/get-match`);
-
-      setLoading(false);
-
-
-      if (response.data.body.status === 'waiting') {
-        setTimeout(fetchMatchData, 3000);
-      } else if (response.data.body.status === 'success') {
-
-      } else if (response.data.body.status === 'failed') {
-
+    axios.post(`${process.env.NEXT_PUBLIC_API_URL_NGROK}trigger_training`, {
+      trigger: true
+    })
+      .then(response => {
+        setTimeout(() => router.push('/photo-result'), 5000);
+      })
+      .catch(error => {
+        setLoading(false);
         Swal.fire({
           icon: 'error',
           title: 'Gagal diproses. Silahkan coba lagi.',
@@ -168,14 +163,44 @@ const CameraPage = () => {
           showCancelButton: true,
           cancelButtonText: 'Back to home',
           cancelButtonColor: '#ef4444',
-
         }).then((result) => {
           if (result.isConfirmed) {
             startCountdown(5);
           } else if (result.isDismissed) {
             router.push('/');
           }
-        })
+        });
+      });
+  };
+
+  const fetchMatchData = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}scanner/get-match`);
+
+      setLoading(false);
+
+      if (response.data.body.status === 'waiting') {
+        setTimeout(fetchMatchData, 3000);
+      } else if (response.data.body.status === 'success') {
+        // Handle success case
+      } else if (response.data.body.status === 'failed') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal diproses. Silahkan coba lagi.',
+          showConfirmButton: true,
+          confirmButtonText: 'Scan again',
+          confirmButtonColor: '#3b82f5',
+          showCancelButton: true,
+          cancelButtonText: 'Back to home',
+          cancelButtonColor: '#ef4444',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            startCountdown(5);
+          } else if (result.isDismissed) {
+            router.push('/');
+          }
+        });
       }
     } catch (error) {
       console.error('Error fetching match data:', error);
@@ -187,8 +212,7 @@ const CameraPage = () => {
         showConfirmButton: false
       }).then(() => {
         router.push('/');
-      })
-
+      });
     }
   };
 

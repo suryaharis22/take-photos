@@ -1,269 +1,188 @@
-import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { motion } from 'framer-motion';
+// src\pages\face-dectection.jsx
+import * as tf from '@tensorflow/tfjs';
+import * as facemesh from '@tensorflow-models/facemesh';
+import Webcam from 'react-webcam';
+import { useEffect, useRef, useState } from 'react';
+import { drawMesh } from '@/utils/Points-face';
+import { base64ToBlob } from '@/utils/base64ToBlob';
+import { generateFileName } from '@/utils/generateFileName';
 import axios from 'axios';
-import Swal from 'sweetalert2';
+import { triggerTraining } from '@/utils/trigerTrening';
+import { useRouter } from 'next/router';
 
-const CameraPage = () => {
+function App() {
   const router = useRouter();
-  const [videoSrc, setVideoSrc] = useState(null);
-  const [stream, setStream] = useState(null);
-  const [error, setError] = useState(null);
-  const [countdown, setCountdown] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [cameraDevices, setCameraDevices] = useState([]);
-  const [selectedCamera, setSelectedCamera] = useState('');
-
-  const videoRef = useRef(null);
+  const webcamRef = useRef(null);
   const canvasRef = useRef(null);
+  const [dataFace, setDataFace] = useState();
+  const [images, setImages] = useState([]);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    getDevices();
-  }, []);
+  const [centerPosition, setCenterPosition] = useState(false);
+  const [leftPosition, setLeftPosition] = useState(false);
+  const [rightPosition, setRightPosition] = useState(false);
+  const [obliqueLeftPosition, setObliqueLeftPosition] = useState(false);
+  const [obliqueRightPosition, setObliqueRightPosition] = useState(false);
 
-  useEffect(() => {
-    if (selectedCamera) {
-      startVideo(selectedCamera);
-    }
-    return () => stopStream();
-  }, [selectedCamera]);
-
-  const getDevices = async () => {
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = devices.filter(device => device.kind === 'videoinput');
-      if (videoDevices.length === 0) {
-        setError('Tidak ada perangkat kamera yang tersedia.');
-        return;
-      }
-      setCameraDevices(videoDevices);
-      setSelectedCamera(selectPreferredCamera(videoDevices));
-    } catch (err) {
-      handleError('Tidak dapat mengakses perangkat kamera. Pastikan perangkat kamera terhubung dengan benar.');
-    }
-  };
-
-  const selectPreferredCamera = (devices) => {
-    const rearCamera = devices.find(device => device.label.toLowerCase().includes('rear'));
-    const frontCamera = devices.find(device => device.label.toLowerCase().includes('front')) || devices[0];
-    return rearCamera ? rearCamera.deviceId : frontCamera.deviceId;
-  };
-
-  const startVideo = async (deviceId) => {
-    try {
-      // stopStream();
-
-      const constraints = {
-        video: { deviceId: { exact: deviceId } }
-      };
-
-      // Request user media
-      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
-
-      // Set the stream to videoRef
-      if (videoRef.current) {
-        videoRef.current.srcObject = newStream;
-        setStream(newStream);
-        setError(null); // Clear any previous error
-        startCountdown(5); // Restart countdown when video starts
-      } else {
-        handleError('Video element tidak ditemukan.');
-      }
-    } catch (err) {
-      console.error('Error starting video: ', err);
-      handleError(`Tidak dapat mengakses kamera. Pastikan kamera diaktifkan dan izinkan akses kamera.${err}`);
-    }
-  };
-
-  const stopStream = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-  };
-
-  const startCountdown = (duration) => {
-    setCountdown(duration);
-    let timeRemaining = duration;
-    const interval = setInterval(() => {
-      setCountdown(timeRemaining--);
-      if (timeRemaining < 0) {
-        clearInterval(interval);
-        capturePhoto();
-      }
-    }, 1000);
-  };
-
-  const capturePhoto = () => {
+  const captureImage = () => {
     const canvas = canvasRef.current;
-    const video = videoRef.current;
-    if (!canvas || !video) return handleError('Gagal menangkap foto.');
+    const video = webcamRef.current.video;
+    if (!canvas || !video) return console.error('Failed to capture photo.');
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
+
     const context = canvas.getContext('2d');
+    if (!context) return console.error('Failed to get canvas context.');
+
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const photoURL = canvas.toDataURL('image/jpeg');
-    savePhoto(photoURL);
+
+    const image = canvas.toDataURL('image/png');
+    setImages((prevImages) => [...prevImages, image]);
   };
 
-  const savePhoto = (photoURL) => {
-    fetch(photoURL)
-      .then(res => res.blob())
-      .then(blob => {
-        let dataPhoto = new FormData();
-        const uniqueName = `${Date.now()}${Math.floor(Math.random() * 10000)}.jpg`;
-        dataPhoto.append('image', blob, uniqueName);
+  useEffect(() => {
+    if (dataFace) {
+      const leftCheekZ = Math.round(dataFace[0]?.annotations?.leftCheek[0][2]);
 
-        axios.post(`${process.env.NEXT_PUBLIC_API_URL_NGROK}upload_compare`, dataPhoto, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          },
-          maxBodyLength: Infinity
-        })
-          .then(response => {
-            const existingPhotos = JSON.parse(localStorage.getItem('capturedPhotos')) || [];
-            localStorage.setItem('capturedPhotos', JSON.stringify([...existingPhotos, photoURL]));
-            redirectToResult();
-          })
-          .catch(error => {
-            Swal.fire({
-              icon: 'error',
-              title: 'Gagal mendeteksi wajah. Silahkan coba lagi.',
-              timer: 3000,
-              showConfirmButton: false
-            }).then(() => {
-              startCountdown(5);
-            });
+      if (dataFace[0]?.faceInViewConfidence >= 0.9) {
+        if (!centerPosition && leftCheekZ >= -3 && leftCheekZ <= 3) {
+          setCenterPosition(true);
+          captureImage();
+        }
+
+        if (!leftPosition && leftCheekZ >= 20 && leftCheekZ <= 25) {
+          setLeftPosition(true);
+          captureImage();
+        }
+
+        if (!rightPosition && leftCheekZ >= -25 && leftCheekZ <= -20) {
+          setRightPosition(true);
+          captureImage();
+        }
+
+        if (!obliqueLeftPosition && leftCheekZ > 5 && leftCheekZ < 20) {
+          setObliqueLeftPosition(true);
+          captureImage();
+        }
+
+        if (!obliqueRightPosition && leftCheekZ < -5 && leftCheekZ > -20) {
+          setObliqueRightPosition(true);
+          captureImage();
+        }
+      } else {
+        console.log('Lighting might be poor or face detection is unclear');
+      }
+    }
+  }, [dataFace, centerPosition, leftPosition, rightPosition, obliqueLeftPosition, obliqueRightPosition]);
+
+  useEffect(() => {
+    console.log(images);
+
+    const uploadImages = async () => {
+      if (images.length === 5) {
+        setLoading(true);
+        try {
+          const formData = new FormData();
+
+          images.forEach((image, index) => {
+            const imageBlob = base64ToBlob(image, 'image/jpeg');
+            const fileName = generateFileName(index);
+            formData.append('image', imageBlob, fileName);
           });
 
-        setVideoSrc(photoURL);
-      })
-      .catch(error => {
-        handleError('Gagal menyimpan foto.');
-      });
-  };
+          const response = await axios.post(
+            `${process.env.NEXT_PUBLIC_API_URL_NGROK}upload_compare`,
+            formData,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+            }
+          );
 
-  const redirectToResult = () => {
-    setLoading(true);
-    axios.post(`${process.env.NEXT_PUBLIC_API_URL_NGROK}trigger_training`, {
-      trigger: true
-    })
-      .then(response => {
-        setTimeout(() => router.push('/photo-result'), 5000);
-      })
-      .catch(error => {
-        setLoading(false);
-        Swal.fire({
-          icon: 'error',
-          title: 'Gagal diproses. Silahkan coba lagi.',
-          showConfirmButton: true,
-          confirmButtonText: 'Scan again',
-          confirmButtonColor: '#3b82f5',
-          showCancelButton: true,
-          cancelButtonText: 'Back to home',
-          cancelButtonColor: '#ef4444',
-        }).then((result) => {
-          if (result.isConfirmed) {
-            startCountdown(5);
-          } else if (result.isDismissed) {
-            router.push('/');
+          console.log('Upload successful', response.data);
+          if (response.status === 200) {
+            await triggerTraining(router);
           }
-        });
-      });
-  };
 
-  const fetchMatchData = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}scanner/get-match`);
+        } catch (error) {
+          console.error('Error uploading images', error);
+        } finally {
+          setLoading(false);
 
-      setLoading(false);
-
-      if (response.data.body.status === 'waiting') {
-        setTimeout(fetchMatchData, 3000);
-      } else if (response.data.body.status === 'success') {
-        // Handle success case
-      } else if (response.data.body.status === 'failed') {
-        Swal.fire({
-          icon: 'error',
-          title: 'Gagal diproses. Silahkan coba lagi.',
-          showConfirmButton: true,
-          confirmButtonText: 'Scan again',
-          confirmButtonColor: '#3b82f5',
-          showCancelButton: true,
-          cancelButtonText: 'Back to home',
-          cancelButtonColor: '#ef4444',
-        }).then((result) => {
-          if (result.isConfirmed) {
-            startCountdown(5);
-          } else if (result.isDismissed) {
-            router.push('/');
-          }
-        });
+          setImages([]);
+        }
       }
-    } catch (error) {
-      console.error('Error fetching match data:', error);
-      setLoading(false);
-      Swal.fire({
-        icon: 'error',
-        title: 'Gagal diproses. Silahkan coba lagi.',
-        timer: 3000,
-        showConfirmButton: false
-      }).then(() => {
-        router.push('/');
-      });
-    }
+    };
+
+    uploadImages();
+  }, [images, router]);
+
+  const runFacemesh = async () => {
+    const net = await facemesh.load({
+      inputResolution: isMobileDevice ? { width: 360, height: 640 } : { width: 640, height: 480 },
+      scale: 0.8,
+    });
+
+    const detect = async () => {
+      if (
+        webcamRef.current &&
+        webcamRef.current.video.readyState === 4
+      ) {
+        const video = webcamRef.current.video;
+        const videoWidth = webcamRef.current.video.videoWidth;
+        const videoHeight = webcamRef.current.video.videoHeight;
+
+        webcamRef.current.video.width = videoWidth;
+        webcamRef.current.video.height = videoHeight;
+
+        const canvas = canvasRef.current;
+        if (!canvas) return console.error('Failed to get canvas reference.');
+
+        canvas.width = videoWidth;
+        canvas.height = videoHeight;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return console.error('Failed to get canvas context.');
+
+        const face = await net.estimateFaces(video);
+        setDataFace(face);
+
+        drawMesh(face, ctx);
+      }
+      requestAnimationFrame(detect);
+    };
+
+    detect();
   };
 
-  const handleError = (message) => {
-    setError(message);
-    setLoading(false);
-  };
+  useEffect(() => {
+    runFacemesh();
+  }, [isMobileDevice]);
+
+  useEffect(() => {
+    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+    setIsMobileDevice(isMobile);
+  }, []);
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6 text-center">Ambil Foto</h1>
-      <div className="relative flex flex-col items-center justify-center">
-        {error ? (
-          <div className="text-red-500 mb-4 text-center">
-            <p>{error}</p>
-            <button onClick={() => startVideo(selectedCamera)} className="mt-4 bg-yellow-500 text-white py-2 px-4 rounded">
-              Coba Lagi
-            </button>
-          </div>
-        ) : (
-          <>
-            <video ref={videoRef} className="border border-gray-400 rounded-lg shadow-lg w-full max-w-md h-auto" autoPlay></video>
-            <canvas ref={canvasRef} className="hidden"></canvas>
-            {countdown > 0 && (
-              <motion.div
-                className="absolute text-white text-6xl font-bold "
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
-              >
-                {countdown}
-              </motion.div>
-            )}
-          </>
-        )}
+    <div className="relative flex justify-center items-center min-w-screen min-h-screen">
+
+      <div >
+        <Webcam
+          ref={webcamRef}
+          className="absolute top-0 left-0 w-full h-full object-cover"
+        />
+        <canvas
+          ref={canvasRef}
+          className="absolute top-0 left-0 w-full h-full"
+        />
       </div>
-      <div className="mt-4 flex flex-col items-center">
-        <select
-          id="camera-select"
-          className="bg-gray-200 border border-gray-300 rounded-md p-2"
-          onChange={(e) => setSelectedCamera(e.target.value)}
-          value={selectedCamera}
-        >
-          {cameraDevices.map((device, index) => (
-            <option key={index} value={device.deviceId}>
-              {device.label || `Camera ${index + 1}`}
-            </option>
-          ))}
-        </select>
-      </div>
+      {/* Loading */}
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="absolute top-0 inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div role="status" className="flex flex-col items-center w-[">
             <svg aria-hidden="true" className="w-52 h-50 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor" />
@@ -273,8 +192,9 @@ const CameraPage = () => {
           </div>
         </div>
       )}
+
     </div>
   );
-};
+}
 
-export default CameraPage;
+export default App;
