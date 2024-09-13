@@ -44,8 +44,8 @@ const PhotoResult = () => {
             transition={{ duration: 0.5 }}
           >
             <img
-              src={`http://192.168.128.108:5000/matched_image/${photo}`}
-              alt={`http://192.168.128.108:5000/matched_image/${photo}`}
+              src={`${process.env.NEXT_PUBLIC_API_URL_NGROK}/matched-image/${photo}`}
+              alt={`${process.env.NEXT_PUBLIC_API_URL_NGROK}/matched-image/${photo}`}
               className="w-full object-cover"
             />
           </motion.div>
