@@ -113,6 +113,8 @@ const CameraPage = () => {
       .then(blob => {
         let dataPhoto = new FormData();
         const uniqueName = `${Date.now()}${Math.floor(Math.random() * 10000)}.jpg`;
+        console.log(uniqueName);
+
         dataPhoto.append('image', blob, uniqueName);
 
         axios.post(`${process.env.NEXT_PUBLIC_API_URL_NGROK}upload_compare`, dataPhoto, {

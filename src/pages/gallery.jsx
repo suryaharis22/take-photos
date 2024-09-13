@@ -1,18 +1,67 @@
-
-import WatermarkedImage from "@/components/WatermarkedImage";
+import Watermark from "@/components/Watermark";
 import { IconDownload, IconHome } from "@tabler/icons-react";
+import axios from "axios";
 import { motion } from "framer-motion";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const Gallery = () => {
     const router = useRouter();
     const [pickedItems, setPickedItems] = useState([]);
-    const items = Array.from({ length: 30 }, (_, index) => index + 1);
+    const [images, setImages] = useState([]); // Semua gambar dari API
+    const [visibleImages, setVisibleImages] = useState([]); // Gambar yang ditampilkan
+    const [loading, setLoading] = useState(false);
+    const observerRef = useRef(null);
+    const [itemsPerPage] = useState(10); // Jumlah item yang ditampilkan setiap kali
 
+    // Fungsi untuk mengambil semua gambar dari API
+    const fetchImages = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL_NGROK}get_all_images`);
+            const allImages = response.data.all_images;
+            setImages(allImages); // Simpan semua gambar
+            setVisibleImages(allImages.slice(0, itemsPerPage)); // Tampilkan hanya 10 gambar pertama
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fungsi untuk menambahkan lebih banyak gambar ke tampilan
+    const loadMoreImages = () => {
+        const currentLength = visibleImages.length;
+        const nextImages = images.slice(currentLength, currentLength + itemsPerPage);
+        setVisibleImages((prevImages) => [...prevImages, ...nextImages]);
+    };
+
+    // Memantau ketika pengguna mencapai bagian bawah halaman untuk memuat lebih banyak data
     useEffect(() => {
-        console.log(pickedItems);
-    }, [pickedItems]);
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && !loading && visibleImages.length < images.length) {
+                    loadMoreImages();
+                }
+            },
+            { threshold: 1.0 }
+        );
+
+        if (observerRef.current) {
+            observer.observe(observerRef.current);
+        }
+
+        return () => {
+            if (observerRef.current) {
+                observer.unobserve(observerRef.current);
+            }
+        };
+    }, [visibleImages, images]);
+
+    // Ambil gambar saat pertama kali halaman dimuat
+    useEffect(() => {
+        fetchImages();
+    }, []);
 
     const handlePickItem = (index) => {
         setPickedItems((prevPickedItems) => {
@@ -48,22 +97,25 @@ const Gallery = () => {
                 )}
             </div>
             <div className="flex flex-wrap justify-center h-full bg-gray-100 min-w-screen overflow-auto p-2 pb-20">
-                {items.map((item) => (
+                {visibleImages.map((image, index) => (
                     <label
-                        key={item}
-                        htmlFor={`checkbox-${item}`}
+                        key={index}
+                        htmlFor={`checkbox-${image}`}
                         className="relative w-44 h-44 bg-blue-500 m-2 rounded-md border-2 border-black"
                     >
                         <input
-                            id={`checkbox-${item}`}
+                            id={`checkbox-${image}`}
                             type="checkbox"
                             className="absolute top-2 left-2 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                            onChange={() => handlePickItem(item)}
-                            checked={pickedItems.includes(item)}
+                            onChange={() => handlePickItem(image)}
+                            checked={pickedItems.includes(image)}
                         />
-                        <WatermarkedImage imageUrl="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHZqj-XReJ2R76nji51cZl4ETk6-eHRmZBRw&s" logoUrl="./logo.png" />
+                        <Watermark imageUrl={`${process.env.NEXT_PUBLIC_API_URL_NGROK}all_image/${image}`} />
                     </label>
                 ))}
+                {/* Infinite scrolling trigger */}
+                <div ref={observerRef} className="h-10 w-full"></div>
+                {loading && <p className="text-center w-full">Loading...</p>}
             </div>
         </div>
     );

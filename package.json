@@ -13,12 +13,14 @@
     "@tensorflow-models/facemesh": "^0.0.4",
     "@tensorflow/tfjs": "^4.21.0",
     "axios": "^1.7.7",
+    "canvas": "^2.11.2",
     "face-api.js": "^0.22.2",
     "framer-motion": "^11.5.4",
     "next": "14.2.8",
     "react": "^18",
     "react-dom": "^18",
     "react-webcam": "^7.2.0",
+    "sharp": "^0.33.5",
     "sweetalert2": "^11.14.0"
   },
   "devDependencies": {

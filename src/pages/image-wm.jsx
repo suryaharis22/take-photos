@@ -1,16 +1,16 @@
-import WatermarkedImage from "@/components/WatermarkedImage";
+// pages/index.js
 
+import Watermark from "@/components/Watermark";
 
-const Page = () => {
+const ImageWM = () => {
+    const imageUrl = 'https://faceid.nuncorp.id/worker/all_image/image-1726219429328-1418.jpg'; // Ganti dengan URL gambar yang diinginkan
+
     return (
         <div>
-            <h1>Gambar dengan Watermark Logo</h1>
-            <div className="w-40 h-40">
-
-                <WatermarkedImage imageUrl="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHZqj-XReJ2R76nji51cZl4ETk6-eHRmZBRw&s" logoUrl="./logo.png" />
-            </div>
+            <h1>Gambar dengan Watermark</h1>
+            <Watermark imageUrl={imageUrl} />
         </div>
     );
 };
 
-export default Page;
+export default ImageWM;

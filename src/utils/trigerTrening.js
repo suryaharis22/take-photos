@@ -4,11 +4,20 @@ import Swal from "sweetalert2";
 
 export const triggerTraining = async (router) => {
     try {
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL_NGROK}trigger_training`, {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL_NGROK}trigger_training`, {
             trigger: true
-        });
-
-        setTimeout(() => router.push('/photo-result'), 5000);
+        })
+        if (response.status === 200) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Training Success',
+                showConfirmButton: false,
+                timer: 1500
+            }).then((result) => {
+                router.push('/photo-result')
+            })
+        }
+        // setTimeout(() => router.push('/photo-result'), 5000);
     } catch (error) {
         Swal.fire({
             icon: 'error',

@@ -1,3 +1,5 @@
+// src\components\WatermarkedImage.jsx
+
 import { useEffect, useRef } from 'react';
 
 const WatermarkedImage = ({ imageUrl, logoUrl }) => {
