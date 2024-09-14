@@ -10,7 +10,7 @@ export const triggerTraining = async (router) => {
         if (response.status === 200) {
             Swal.fire({
                 icon: 'success',
-                title: 'Training Success',
+                title: 'Pemindaian Wajah Berhasil',
                 showConfirmButton: false,
                 timer: 1500
             }).then((result) => {
