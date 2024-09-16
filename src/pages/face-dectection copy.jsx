@@ -44,6 +44,14 @@ function App() {
     };
 
     useEffect(() => {
+        // console.log(Math.round(dataFace[0]?.faceInViewConfidence));
+        // if (dataFace && dataFace.length > 0 && dataFace[0]?.annotations?.silhouette && dataFace[0].annotations.silhouette.length > 0) {
+        //     console.log('idx0', Math.round(dataFace[0].annotations.silhouette[0][0]));
+        //     console.log('idx1', Math.round(dataFace[0].annotations.silhouette[0][1]));
+        //     console.log('idx2', Math.round(dataFace[0].annotations.silhouette[0][2]));
+        // }
+        // console.log(dataFace[0]);
+
         if (dataFace) {
             const leftCheekZ = Math.round(dataFace[0]?.annotations?.leftCheek[0][2]);
 

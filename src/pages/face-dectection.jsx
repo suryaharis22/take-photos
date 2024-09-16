@@ -10,7 +10,7 @@ import axios from "axios";
 import { triggerTraining } from "@/utils/trigerTrening";
 import { useRouter } from "next/router";
 import Swal from "sweetalert2";
-import { IconMoodConfuzed } from "@tabler/icons-react";
+import { IconHourglassEmpty, IconMoodConfuzed } from "@tabler/icons-react";
 
 function App() {
     const router = useRouter();
@@ -45,13 +45,7 @@ function App() {
     };
 
     useEffect(() => {
-        // console.log(Math.round(dataFace[0]?.faceInViewConfidence));
-        // if (dataFace && dataFace.length > 0 && dataFace[0]?.annotations?.silhouette && dataFace[0].annotations.silhouette.length > 0) {
-        //     console.log('idx0', Math.round(dataFace[0].annotations.silhouette[0][0]));
-        //     console.log('idx1', Math.round(dataFace[0].annotations.silhouette[0][1]));
-        //     console.log('idx2', Math.round(dataFace[0].annotations.silhouette[0][2]));
-        // }
-        // console.log(dataFace[0]);
+
 
 
         if (dataFace) {
@@ -154,8 +148,8 @@ function App() {
     const runFacemesh = async () => {
         const net = await facemesh.load({
             inputResolution: isMobileDevice
-                ? { width: 360, height: 640 }
-                : { width: 540, height: 480 },
+                ? { width: 360, height: 640 }  // Resolusi untuk perangkat mobile
+                : { width: 640, height: 480 }, // Resolusi untuk desktop
             scale: 0.8,
         });
 
@@ -165,6 +159,7 @@ function App() {
                 const videoWidth = webcamRef.current.video.videoWidth;
                 const videoHeight = webcamRef.current.video.videoHeight;
 
+                // Tentukan ukuran video dan canvas sesuai dengan resolusi perangkat
                 webcamRef.current.video.width = videoWidth;
                 webcamRef.current.video.height = videoHeight;
 
@@ -177,12 +172,18 @@ function App() {
                 const ctx = canvas.getContext("2d");
                 if (!ctx) return console.error("Failed to get canvas context.");
 
+                // Atur mode `mirrored` agar sesuai dengan tampilan video
+                ctx.translate(videoWidth, 0);  // Pindahkan titik awal ke ujung kanan
+                ctx.scale(-1, 1);  // Balikkan gambar secara horizontal (mirrored)
+
                 const face = await net.estimateFaces(video);
                 setDataFace(face);
 
-                // drawMesh(face, ctx);
+                // Jika diperlukan, Anda bisa mengaktifkan ini untuk menggambar mesh wajah
+                drawMesh(face, ctx);
+
+                requestAnimationFrame(detect);
             }
-            requestAnimationFrame(detect);
         };
 
         detect();
@@ -198,13 +199,14 @@ function App() {
     }, []);
 
     const getInstructionText = () => {
-        if (!dataFace || !dataFace[0]) return (
+        if (!dataFace) return (
             <>
-                <p className="mb-10 bg-opacity-50 bg-gray-500 rounded-lg ">Silakan posisi wajah Anda di depan kamera.</p>
-                <IconMoodConfuzed className="w-6 h-6 text-white" />
+                <p className="mb-10 bg-opacity-50 bg-gray-500 rounded-lg ">please waiting.</p>
+                <img src="/loading.gif" alt="Loading..." width={250} height={250} />
+
             </>
         );
-        if (dataFace[0]?.faceInViewConfidence < 1) {
+        if (dataFace[0]?.faceInViewConfidence < 1 || !dataFace[0]) {
             return (
                 <>
                     <p className="mb-10 bg-opacity-50 bg-gray-500 rounded-lg ">Lighting might be poor or face detection is unclear.</p>
@@ -244,10 +246,11 @@ function App() {
     };
 
     return (
-        <div className="relative flex flex-col items-center min-h-screen p-4 bg-gray-900">
+        <div className="relative flex flex-col items-center min-h-screen p-4 bg-white">
             <div className="relative w-full max-w-4xl h-[500px] bg-gray-800 rounded-lg overflow-hidden shadow-lg">
                 <Webcam
                     ref={webcamRef}
+                    mirrored={true}
                     className="absolute top-0 left-0 w-full h-full object-cover"
                 />
                 <canvas
