@@ -265,7 +265,7 @@ const CameraPage = () => {
           </>
         )}
       </div>
-      <div className="mt-4 flex flex-col items-center">
+      {/* <div className="mt-4 flex flex-col items-center">
         <select
           id="camera-select"
           className="bg-gray-200 border border-gray-300 rounded-md p-2"
@@ -278,7 +278,7 @@ const CameraPage = () => {
             </option>
           ))}
         </select>
-      </div>
+      </div> */}
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div role="status" className="flex flex-col items-center w-[">
