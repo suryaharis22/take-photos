@@ -1,21 +1,20 @@
-import Watermark from '@/components/Watermark';
-import axios from 'axios';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import Swal from 'sweetalert2';
-import { useRouter } from 'next/router';
+import Watermark from "@/components/Watermark";
+import axios from "axios";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
+import { useRouter } from "next/router";
 import { motion } from "framer-motion";
-import { IconCash, IconDownload, IconHome } from '@tabler/icons-react';
-
+import { IconCash, IconDownload, IconHome } from "@tabler/icons-react";
 
 const CardImages = () => {
   const router = useRouter();
   const [selectedImages, setSelectedImages] = useState([]);
   const [photos, setPhotos] = useState([]);
   const [paymentInfo, setPaymentInfo] = useState({
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
+    cardNumber: "",
+    expiryDate: "",
+    cvv: "",
   });
 
   useEffect(() => {
@@ -34,9 +33,6 @@ const CardImages = () => {
       });
   }, []);
 
-
-
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setPaymentInfo({ ...paymentInfo, [name]: value });
@@ -54,7 +50,7 @@ const CardImages = () => {
 
   const handleDownload = () => {
     Swal.fire({
-      title: 'Payment Gateway',
+      title: "Payment Gateway",
       html: `
         <div>
           <div class="mb-2 text-left">
@@ -72,34 +68,34 @@ const CardImages = () => {
         </div>
       `,
       showCancelButton: true,
-      confirmButtonText: 'Pay Now',
-      cancelButtonText: 'Cancel',
+      confirmButtonText: "Pay Now",
+      cancelButtonText: "Cancel",
       preConfirm: () => {
-        const cardNumber = document.getElementById('cardNumber').value;
-        const expiryDate = document.getElementById('expiryDate').value;
-        const cvv = document.getElementById('cvv').value;
+        const cardNumber = document.getElementById("cardNumber").value;
+        const expiryDate = document.getElementById("expiryDate").value;
+        const cvv = document.getElementById("cvv").value;
 
         if (!cardNumber || !expiryDate || !cvv) {
-          Swal.showValidationMessage('Please fill out all fields.');
+          Swal.showValidationMessage("Please fill out all fields.");
           return false;
         } else {
           setPaymentInfo({
             cardNumber,
             expiryDate,
             cvv,
-            status: 'success',
+            status: "success",
           });
-          sessionStorage.setItem('paymentInfo', JSON.stringify(paymentInfo));
-          sessionStorage.setItem('selectedImages', JSON.stringify(selectedImages));
+          sessionStorage.setItem("paymentInfo", JSON.stringify(paymentInfo));
+          sessionStorage.setItem(
+            "selectedImages",
+            JSON.stringify(selectedImages)
+          );
 
-          router.push('/my-photo');
-
+          router.push("/my-photo");
         }
       },
     });
   };
-
-
 
   return (
     <div className="container mx-auto p-4">
@@ -143,8 +139,11 @@ const CardImages = () => {
                 id={`${photo}`}
                 onChange={() => handleCheckboxChange(photo)}
               />
-
-              <Watermark imageUrl={`${process.env.NEXT_PUBLIC_API_URL_NGROK}matched_image/${photo}`} />
+              <img
+                src={`${process.env.NEXT_PUBLIC_API_URL_NGROK}matched_image/${image}`}
+                alt={`${process.env.NEXT_PUBLIC_API_URL_NGROK}matched_image/${image}`}
+              />
+              {/* <Watermark imageUrl={`${process.env.NEXT_PUBLIC_API_URL_NGROK}matched_image/${photo}`} /> */}
 
               {/* Highlight checkbox if selected */}
               <div className="absolute inset-0 flex justify-center items-center bg-blue-500 bg-opacity-30 opacity-0 peer-checked:opacity-100 transition duration-300">
@@ -152,7 +151,6 @@ const CardImages = () => {
               </div>
             </label>
           ))}
-
         </div>
       ) : (
         <div className="flex justify-center items-center h-full">
