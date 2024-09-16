@@ -117,43 +117,30 @@ const CameraPage = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6 text-center">Ambil Foto</h1>
+      <h1 className="text-2xl md:text-4xl font-bold mb-6 text-center">Ambil Foto</h1>
       <div className="relative flex flex-col items-center justify-center">
-        {error ? (
-          <div className="text-red-500 mb-4 text-center">
-            <p>{error}</p>
-            <button
-              onClick={() => startVideo(selectedCamera)}
-              className="mt-4 bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600 transition duration-300"
-            >
-              Coba Lagi
-            </button>
-          </div>
-        ) : (
-          <>
-            <Webcam
-              ref={webcamRef}
-              audio={false}
-              screenshotFormat="image/jpeg"
-              mirrored={true}
-              className="w-full max-w-md rounded-lg shadow-lg"
-              videoConstraints={{ deviceId: selectedCamera }}
-            />
-            {countdown > 0 && (
-              <motion.div
-                className="absolute text-white text-6xl font-bold"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
-              >
-                {countdown}
-              </motion.div>
-            )}
-          </>
+        <Webcam
+          ref={webcamRef}
+          audio={false}
+          screenshotFormat="image/jpeg"
+          mirrored={true}
+          className="w-full max-w-md rounded-lg shadow-lg"
+          videoConstraints={{ deviceId: selectedCamera }}
+        />
+        {countdown > 0 && (
+          <motion.div
+            className="absolute text-white text-6xl md:text-8xl font-bold"
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 1, repeat: Infinity }}
+          >
+            {countdown}
+          </motion.div>
         )}
       </div>
-
       {loading && <Loading />}
     </div>
+
+
   );
 };
 
