@@ -10,7 +10,6 @@ import axios from "axios";
 import { triggerTraining } from "@/utils/trigerTrening";
 import { useRouter } from "next/router";
 import Swal from "sweetalert2";
-import { IconMoodConfuzed } from "@tabler/icons-react";
 
 function App() {
     const router = useRouter();
@@ -45,15 +44,6 @@ function App() {
     };
 
     useEffect(() => {
-        // console.log(Math.round(dataFace[0]?.faceInViewConfidence));
-        // if (dataFace && dataFace.length > 0 && dataFace[0]?.annotations?.silhouette && dataFace[0].annotations.silhouette.length > 0) {
-        //     console.log('idx0', Math.round(dataFace[0].annotations.silhouette[0][0]));
-        //     console.log('idx1', Math.round(dataFace[0].annotations.silhouette[0][1]));
-        //     console.log('idx2', Math.round(dataFace[0].annotations.silhouette[0][2]));
-        // }
-        // console.log(dataFace[0]);
-
-
         if (dataFace) {
             const leftCheekZ = Math.round(dataFace[0]?.annotations?.leftCheek[0][2]);
 
@@ -180,7 +170,7 @@ function App() {
                 const face = await net.estimateFaces(video);
                 setDataFace(face);
 
-                // drawMesh(face, ctx);
+                drawMesh(face, ctx);
             }
             requestAnimationFrame(detect);
         };
@@ -198,45 +188,11 @@ function App() {
     }, []);
 
     const getInstructionText = () => {
-        if (!dataFace || !dataFace[0]) return (
-            <>
-                <p className="mb-10 bg-opacity-50 bg-gray-500 rounded-lg ">Silakan posisi wajah Anda di depan kamera.</p>
-                <IconMoodConfuzed className="w-6 h-6 text-white" />
-            </>
-        );
-        if (dataFace[0]?.faceInViewConfidence < 1) {
-            return (
-                <>
-                    <p className="mb-10 bg-opacity-50 bg-gray-500 rounded-lg ">Lighting might be poor or face detection is unclear.</p>
-                    {/* <IconMoodConfuzed className="w-6 h-6 text-white" /> */}
-                </>
-            );
-        }
+        if (!dataFace || !dataFace[0]) return "Silakan posisi wajah Anda di depan kamera.";
 
-        if (!centerPosition) return (
-            <>
-                <p className="mb-10 bg-opacity-50 bg-gray-500 rounded-lg animate-pulse">
-                    Posisikan wajah Anda di tengah.
-                </p>
-                <img src="./face_center.png" alt="" className="mt-10 opacity-50 animate-pulse transform transition duration-500 ease-in-out scale-110" />
-            </>
-        );
-        if (!leftPosition) return (
-            <>
-                <p className="mb-10 bg-opacity-50 bg-gray-500 rounded-lg animate-pulse">
-                    Posisikan wajah Anda di sisi kiri.
-                </p>
-                <img src="./face_left.png" alt="" className="mt-10 opacity-50 animate-pulse transform transition duration-500 ease-in-out scale-110" />
-            </>
-        );
-        if (!rightPosition) return (
-            <>
-                <p className="mb-10 bg-opacity-50 bg-gray-500 rounded-lg animate-pulse">
-                    Posisikan wajah Anda di sisi kanan.
-                </p>
-                <img src="./face_right.png" alt="" className="mt-10 opacity-50 animate-pulse transform transition duration-500 ease-in-out scale-110" />
-            </>
-        );
+        if (!centerPosition) return "Posisikan wajah Anda di tengah.";
+        if (!leftPosition) return "Posisikan wajah Anda di sisi kiri.";
+        if (!rightPosition) return "Posisikan wajah Anda di sisi kanan.";
         // if (!obliqueLeftPosition) return "Posisikan wajah Anda di sudut kiri.";
         // if (!obliqueRightPosition) return "Posisikan wajah Anda di sudut kanan.";
 
@@ -255,9 +211,8 @@ function App() {
                     className="absolute top-0 left-0 w-full h-full"
                 />
                 {/* Instruction Message */}
-                <div className="absolute top-4 left-0 right-0 flex flex-col items-center justify-center p-4 font-bold">
+                <div className="absolute top-4 left-0 right-0 text-center text-white text-xl bg-black bg-opacity-50 p-2 rounded-lg">
                     {getInstructionText()}
-
                 </div>
             </div>
 

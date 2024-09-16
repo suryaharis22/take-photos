@@ -65,7 +65,7 @@ const CameraPage = () => {
         videoRef.current.srcObject = newStream;
         setStream(newStream);
         setError(null); // Clear any previous error
-        startCountdown(5); // Restart countdown when video starts
+        startCountdown(3); // Restart countdown when video starts
       } else {
         handleError('Video element tidak ditemukan.');
       }
@@ -108,71 +108,86 @@ const CameraPage = () => {
   };
 
   const savePhoto = (photoURL) => {
-    fetch(photoURL)
-      .then(res => res.blob())
-      .then(blob => {
-        let dataPhoto = new FormData();
-        const uniqueName = `${Date.now()}${Math.floor(Math.random() * 10000)}.jpg`;
-        console.log(uniqueName);
+    // Define how many photos you want to save (in this case, 4)
+    const photoCount = 4;
 
-        dataPhoto.append('image', blob, uniqueName);
+    // Create FormData to hold all the photos
+    let dataPhoto = new FormData();
 
-        axios.post(`${process.env.NEXT_PUBLIC_API_URL_NGROK}upload_compare`, dataPhoto, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          },
-          maxBodyLength: Infinity
+    // Loop to fetch and append 4 photos with unique names
+    for (let i = 0; i < photoCount; i++) {
+      const uniqueName = `${Date.now()}${Math.floor(Math.random() * 10000)}.jpg`; // Create unique file name
+      console.log("Unique name:", uniqueName);
+
+
+      // Fetch the photo and append it to the FormData
+      fetch(photoURL)
+        .then(res => res.blob())
+        .then(blob => {
+          console.log("Appending file:", uniqueName);
+          dataPhoto.append('image', blob, uniqueName); // Append each file to 'images' field
         })
-          .then(response => {
-            const existingPhotos = JSON.parse(localStorage.getItem('capturedPhotos')) || [];
-            localStorage.setItem('capturedPhotos', JSON.stringify([...existingPhotos, photoURL]));
-            redirectToResult();
-          })
-          .catch(error => {
-            Swal.fire({
-              icon: 'error',
-              title: 'Gagal mendeteksi wajah. Silahkan coba lagi.',
-              timer: 3000,
-              showConfirmButton: false
-            }).then(() => {
-              startCountdown(5);
-            });
-          });
+        .catch(error => {
+          console.error("Error fetching photo:", error);
+        });
+    }
 
-        setVideoSrc(photoURL);
+    // After all files are appended, send the multi-upload request
+    setTimeout(() => {
+      axios.post(`${process.env.NEXT_PUBLIC_API_URL_NGROK}upload_compare`, dataPhoto, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        maxBodyLength: Infinity
       })
-      .catch(error => {
-        handleError('Gagal menyimpan foto.');
-      });
+        .then(response => {
+          setLoading(true);
+
+          // Trigger the training process after upload is done
+          axios.post(`${process.env.NEXT_PUBLIC_API_URL_NGROK}trigger_training`, {
+            trigger: true
+          })
+            .then(() => {
+              setLoading(false);
+              router.push('/photo-result'); // Redirect after training trigger
+            })
+            .catch(error => {
+              setLoading(false);
+              console.error("Error triggering training:", error);
+              Swal.fire({
+                icon: 'error',
+                title: 'Gagal diproses. Silahkan coba lagi.',
+                showConfirmButton: true,
+                confirmButtonText: 'Scan again',
+                confirmButtonColor: '#3b82f5',
+                showCancelButton: true,
+                cancelButtonText: 'Back to home',
+                cancelButtonColor: '#ef4444',
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  startCountdown(3);
+                } else {
+                  router.push('/');
+                }
+              });
+            });
+        })
+        .catch(error => {
+          console.error("Error uploading photos:", error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal mendeteksi wajah. Silahkan coba lagi.',
+            timer: 3000,
+            showConfirmButton: false
+          }).then(() => {
+            startCountdown(3);
+          });
+        });
+    }, 1000);
   };
 
   const redirectToResult = () => {
-    setLoading(true);
-    axios.post(`${process.env.NEXT_PUBLIC_API_URL_NGROK}trigger_training`, {
-      trigger: true
-    })
-      .then(response => {
-        setTimeout(() => router.push('/photo-result'), 5000);
-      })
-      .catch(error => {
-        setLoading(false);
-        Swal.fire({
-          icon: 'error',
-          title: 'Gagal diproses. Silahkan coba lagi.',
-          showConfirmButton: true,
-          confirmButtonText: 'Scan again',
-          confirmButtonColor: '#3b82f5',
-          showCancelButton: true,
-          cancelButtonText: 'Back to home',
-          cancelButtonColor: '#ef4444',
-        }).then((result) => {
-          if (result.isConfirmed) {
-            startCountdown(5);
-          } else if (result.isDismissed) {
-            router.push('/');
-          }
-        });
-      });
+
   };
 
   const fetchMatchData = async () => {
@@ -198,7 +213,7 @@ const CameraPage = () => {
           cancelButtonColor: '#ef4444',
         }).then((result) => {
           if (result.isConfirmed) {
-            startCountdown(5);
+            startCountdown(3);
           } else if (result.isDismissed) {
             router.push('/');
           }
@@ -250,7 +265,7 @@ const CameraPage = () => {
           </>
         )}
       </div>
-      <div className="mt-4 flex flex-col items-center">
+      {/* <div className="mt-4 flex flex-col items-center">
         <select
           id="camera-select"
           className="bg-gray-200 border border-gray-300 rounded-md p-2"
@@ -263,7 +278,7 @@ const CameraPage = () => {
             </option>
           ))}
         </select>
-      </div>
+      </div> */}
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div role="status" className="flex flex-col items-center w-[">
