@@ -168,6 +168,7 @@ const CameraPage = () => {
             audio={false}
             screenshotFormat="image/jpeg"
             width="100%"
+            mirrored={true}
           />
           {countdown > 0 && (
             <motion.div
