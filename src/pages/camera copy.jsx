@@ -253,9 +253,10 @@ const CameraPage = () => {
           <>
             <video ref={videoRef} className="border border-gray-400 rounded-lg shadow-lg w-full max-w-md h-auto" autoPlay></video>
             <canvas ref={canvasRef} className="hidden"></canvas>
+
             {countdown > 0 && (
               <motion.div
-                className="absolute text-white text-6xl font-bold "
+                className="absolute text-white text-6xl font-bold"
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ duration: 1, repeat: Infinity }}
               >
