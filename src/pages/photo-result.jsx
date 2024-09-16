@@ -140,8 +140,8 @@ const CardImages = () => {
                 onChange={() => handleCheckboxChange(photo)}
               />
               <img
-                src={`${process.env.NEXT_PUBLIC_API_URL_NGROK}matched_image/${image}`}
-                alt={`${process.env.NEXT_PUBLIC_API_URL_NGROK}matched_image/${image}`}
+                src={`${process.env.NEXT_PUBLIC_API_URL_NGROK}matched_image/${photo}`}
+                alt={`${process.env.NEXT_PUBLIC_API_URL_NGROK}matched_image/${photo}`}
               />
               {/* <Watermark imageUrl={`${process.env.NEXT_PUBLIC_API_URL_NGROK}matched_image/${photo}`} /> */}
 
