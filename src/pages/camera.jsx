@@ -3,9 +3,11 @@ import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import Webcam from 'react-webcam';
 
 const CameraPage = () => {
   const router = useRouter();
+  const webcamRef = useRef(null);
   const [videoSrc, setVideoSrc] = useState(null);
   const [stream, setStream] = useState(null);
   const [error, setError] = useState(null);
@@ -14,8 +16,6 @@ const CameraPage = () => {
   const [cameraDevices, setCameraDevices] = useState([]);
   const [selectedCamera, setSelectedCamera] = useState('');
 
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
 
   useEffect(() => {
     getDevices();
@@ -27,6 +27,8 @@ const CameraPage = () => {
     }
     return () => stopStream();
   }, [selectedCamera]);
+
+
 
   const getDevices = async () => {
     try {
@@ -49,36 +51,20 @@ const CameraPage = () => {
     return rearCamera ? rearCamera.deviceId : frontCamera.deviceId;
   };
 
-  const startVideo = async (deviceId) => {
-    try {
-      // stopStream();
-
-      const constraints = {
-        video: { deviceId: { exact: deviceId } }
-      };
-
-      // Request user media
-      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
-
-      // Set the stream to videoRef
-      if (videoRef.current) {
-        videoRef.current.srcObject = newStream;
-        setStream(newStream);
-        setError(null); // Clear any previous error
-        startCountdown(3); // Restart countdown when video starts
-      } else {
-        handleError('Video element tidak ditemukan.');
-      }
-    } catch (err) {
-      console.error('Error starting video: ', err);
-      handleError(`Tidak dapat mengakses kamera. Pastikan kamera diaktifkan dan izinkan akses kamera.${err}`);
+  const startVideo = (deviceId) => {
+    setVideoSrc(null); // Reset video source
+    if (webcamRef.current) {
+      webcamRef.current.getScreenshot(); // Clear the previous screenshot
     }
+    setCountdown(0); // Reset countdown
   };
 
+
   const stopStream = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
+    // Clear webcam ref
+    if (webcamRef.current) {
+      webcamRef.current.video.srcObject = null;
+      startCountdown(5);
     }
   };
 
@@ -95,36 +81,20 @@ const CameraPage = () => {
   };
 
   const capturePhoto = () => {
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-    if (!canvas || !video) return handleError('Gagal menangkap foto.');
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const photoURL = canvas.toDataURL('image/jpeg');
-    savePhoto(photoURL);
+    const imageSrc = webcamRef.current.getScreenshot();
+    if (!imageSrc) return handleError('Gagal menangkap foto.');
+    savePhoto(imageSrc);
   };
 
   const savePhoto = (photoURL) => {
-    // Define how many photos you want to save (in this case, 4)
     const photoCount = 4;
-
-    // Create FormData to hold all the photos
     let dataPhoto = new FormData();
 
-    // Loop to fetch and append 4 photos with unique names
     for (let i = 0; i < photoCount; i++) {
       const uniqueName = `${Date.now()}${Math.floor(Math.random() * 10000)}.jpg`; // Create unique file name
-      console.log("Unique name:", uniqueName);
-
-
-      // Fetch the photo and append it to the FormData
       fetch(photoURL)
         .then(res => res.blob())
         .then(blob => {
-          console.log("Appending file:", uniqueName);
           dataPhoto.append('image', blob, uniqueName); // Append each file to 'images' field
         })
         .catch(error => {
@@ -132,7 +102,6 @@ const CameraPage = () => {
         });
     }
 
-    // After all files are appended, send the multi-upload request
     setTimeout(() => {
       axios.post(`${process.env.NEXT_PUBLIC_API_URL_NGROK}upload_compare`, dataPhoto, {
         headers: {
@@ -143,13 +112,12 @@ const CameraPage = () => {
         .then(response => {
           setLoading(true);
 
-          // Trigger the training process after upload is done
           axios.post(`${process.env.NEXT_PUBLIC_API_URL_NGROK}trigger_training`, {
             trigger: true
           })
             .then(() => {
               setLoading(false);
-              router.push('/photo-result'); // Redirect after training trigger
+              router.push('/photo-result');
             })
             .catch(error => {
               setLoading(false);
@@ -189,50 +157,6 @@ const CameraPage = () => {
   const redirectToResult = () => {
 
   };
-
-  const fetchMatchData = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}scanner/get-match`);
-
-      setLoading(false);
-
-      if (response.data.body.status === 'waiting') {
-        setTimeout(fetchMatchData, 3000);
-      } else if (response.data.body.status === 'success') {
-        // Handle success case
-      } else if (response.data.body.status === 'failed') {
-        Swal.fire({
-          icon: 'error',
-          title: 'Gagal diproses. Silahkan coba lagi.',
-          showConfirmButton: true,
-          confirmButtonText: 'Scan again',
-          confirmButtonColor: '#3b82f5',
-          showCancelButton: true,
-          cancelButtonText: 'Back to home',
-          cancelButtonColor: '#ef4444',
-        }).then((result) => {
-          if (result.isConfirmed) {
-            startCountdown(3);
-          } else if (result.isDismissed) {
-            router.push('/');
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching match data:', error);
-      setLoading(false);
-      Swal.fire({
-        icon: 'error',
-        title: 'Gagal diproses. Silahkan coba lagi.',
-        timer: 3000,
-        showConfirmButton: false
-      }).then(() => {
-        router.push('/');
-      });
-    }
-  };
-
   const handleError = (message) => {
     setError(message);
     setLoading(false);
@@ -251,11 +175,16 @@ const CameraPage = () => {
           </div>
         ) : (
           <>
-            <video ref={videoRef} className="border border-gray-400 rounded-lg shadow-lg w-full max-w-md h-auto" autoPlay></video>
-            <canvas ref={canvasRef} className="hidden"></canvas>
+            <Webcam
+              ref={webcamRef}
+              audio={false}
+              screenshotFormat="image/jpeg"
+              width="100%"
+              videoConstraints={{ deviceId: selectedCamera }}
+            />
             {countdown > 0 && (
               <motion.div
-                className="absolute text-white text-6xl font-bold "
+                className="absolute text-white text-6xl font-bold"
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ duration: 1, repeat: Infinity }}
               >
@@ -265,6 +194,7 @@ const CameraPage = () => {
           </>
         )}
       </div>
+
       {/* <div className="mt-4 flex flex-col items-center">
         <select
           id="camera-select"
