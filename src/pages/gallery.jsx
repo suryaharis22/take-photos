@@ -1,4 +1,3 @@
-import Watermark from "@/components/Watermark";
 import { IconDownload, IconHome } from "@tabler/icons-react";
 import axios from "axios";
 import { motion } from "framer-motion";
@@ -107,7 +106,8 @@ const Gallery = () => {
       </div>
 
       <div className="flex flex-col items-center h-full bg-gray-100 overflow-auto p-2 pb-20">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full">
+        {/* Mengatur grid agar responsif di mobile, tablet, dan desktop */}
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 w-full">
           {visibleImages.map((image, index) => (
             <label
               key={index}
@@ -126,12 +126,11 @@ const Gallery = () => {
                 className="w-full h-full object-cover"
                 alt={`${process.env.NEXT_PUBLIC_API_URL_NGROK}all_image/${image}`}
               />
-              {/* <Watermark imageUrl={`${process.env.NEXT_PUBLIC_API_URL_NGROK}all_image/${image}`} /> */}
             </label>
           ))}
         </div>
         {/* Infinite scrolling trigger */}
-        <div ref={observerRef} className="h-10 w-full"></div>
+        <div ref={observerRef} className="h-10 w-full mt-4"></div>
         {loading && <p className="text-center w-full">Loading...</p>}
       </div>
     </div>
