@@ -23,7 +23,7 @@ const CameraPage = () => {
     if (webcamRef.current) {
       webcamRef.current.getScreenshot(); // Clear the previous screenshot
     }
-    setCountdown(0); // Reset countdown
+    setCountdown(3); // Reset countdown
   };
 
   const stopStream = () => {
