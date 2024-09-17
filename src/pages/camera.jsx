@@ -23,7 +23,7 @@ const CameraPage = () => {
     if (webcamRef.current) {
       webcamRef.current.getScreenshot(); // Clear the previous screenshot
     }
-    setCountdown(3); // Reset countdown
+    setCountdown(0); // Reset countdown
   };
 
   const stopStream = () => {
@@ -160,26 +160,31 @@ const CameraPage = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl md:text-4xl font-bold mb-6 text-center">Ambil Foto</h1>
+      <h1 className="text-2xl font-bold mb-6 text-center">Ambil Foto</h1>
       <div className="relative flex flex-col items-center justify-center">
-        <Webcam
-          ref={webcamRef}
-          audio={false}
-          screenshotFormat="image/jpeg"
-          mirrored={true}
-          className="w-full max-w-md rounded-lg shadow-lg"
-        />
-        {countdown > 0 && (
-          <motion.div
-            className="absolute text-white text-6xl md:text-8xl font-bold"
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ duration: 1, repeat: Infinity }}
-          >
-            {countdown}
-          </motion.div>
-        )}
+        <>
+          <Webcam
+            ref={webcamRef}
+            audio={false}
+            screenshotFormat="image/jpeg"
+            width="100%"
+            mirrored={true}
+          />
+          {countdown > 0 && (
+            <motion.div
+              className="absolute text-white text-6xl font-bold"
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1, repeat: Infinity }}
+            >
+              {countdown}
+            </motion.div>
+          )}
+        </>
       </div>
-      {loading && <Loading />}
+
+      {loading && (
+        <Loading />
+      )}
     </div>
   );
 };
