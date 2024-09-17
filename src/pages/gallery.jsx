@@ -105,28 +105,31 @@ const Gallery = () => {
           </motion.button>
         )}
       </div>
-      <div className="flex flex-wrap justify-center h-full bg-gray-100 min-w-screen overflow-auto p-2 pb-20">
-        {visibleImages.map((image, index) => (
-          <label
-            key={index}
-            htmlFor={`checkbox-${image}`}
-            className="relative w-44 h-44 bg-blue-500 m-2 rounded-md border-2 border-black"
-          >
-            <input
-              id={`checkbox-${image}`}
-              type="checkbox"
-              className="absolute top-2 left-2 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-              onChange={() => handlePickItem(image)}
-              checked={pickedItems.includes(image)}
-            />
-            <img
-              src={`${process.env.NEXT_PUBLIC_API_URL_NGROK}all_image/${image}`}
-              className="w-full h-full object-cover"
-              alt={`${process.env.NEXT_PUBLIC_API_URL_NGROK}all_image/${image}`}
-            />
-            {/* <Watermark imageUrl={`${process.env.NEXT_PUBLIC_API_URL_NGROK}all_image/${image}`} /> */}
-          </label>
-        ))}
+
+      <div className="flex flex-col items-center h-full bg-gray-100 overflow-auto p-2 pb-20">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full">
+          {visibleImages.map((image, index) => (
+            <label
+              key={index}
+              htmlFor={`checkbox-${image}`}
+              className="relative w-full h-44 bg-blue-500 m-2 rounded-md border-2 border-black"
+            >
+              <input
+                id={`checkbox-${image}`}
+                type="checkbox"
+                className="absolute top-2 left-2 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                onChange={() => handlePickItem(image)}
+                checked={pickedItems.includes(image)}
+              />
+              <img
+                src={`${process.env.NEXT_PUBLIC_API_URL_NGROK}all_image/${image}`}
+                className="w-full h-full object-cover"
+                alt={`${process.env.NEXT_PUBLIC_API_URL_NGROK}all_image/${image}`}
+              />
+              {/* <Watermark imageUrl={`${process.env.NEXT_PUBLIC_API_URL_NGROK}all_image/${image}`} /> */}
+            </label>
+          ))}
+        </div>
         {/* Infinite scrolling trigger */}
         <div ref={observerRef} className="h-10 w-full"></div>
         {loading && <p className="text-center w-full">Loading...</p>}
