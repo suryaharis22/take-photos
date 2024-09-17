@@ -12,10 +12,16 @@ const CameraPage = () => {
   const [videoSrc, setVideoSrc] = useState(null);
   const [countdown, setCountdown] = useState(null);
   const [loading, setLoading] = useState(false);
+  const countdownRef = useRef(null); // Menyimpan referensi interval
 
   useEffect(() => {
     startVideo();
-    return () => stopStream();
+    return () => {
+      stopStream();
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current); // Hentikan countdown jika component unmount
+      }
+    };
   }, []);
 
   const startVideo = async () => {
@@ -23,26 +29,33 @@ const CameraPage = () => {
     if (webcamRef.current) {
       webcamRef.current.getScreenshot(); // Clear the previous screenshot
     }
-    setCountdown(3); // Reset countdown
+    startCountdown(3); // Mulai countdown saat memulai video
   };
 
   const stopStream = () => {
-    // Clear webcam ref
     if (webcamRef.current) {
       webcamRef.current.video.srcObject = null;
-      startCountdown(3);
     }
   };
 
   const startCountdown = (duration) => {
     setCountdown(duration);
     let timeRemaining = duration;
-    const interval = setInterval(() => {
-      setCountdown(timeRemaining--);
-      if (timeRemaining < 0) {
-        clearInterval(interval);
-        capturePhoto();
-      }
+
+    // Bersihkan interval yang sebelumnya jika ada
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+    }
+
+    countdownRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownRef.current); // Hentikan interval saat waktu habis
+          capturePhoto();
+          return null;
+        }
+        return prev - 1; // Update countdown
+      });
     }, 1000);
   };
 
