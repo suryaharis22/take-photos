@@ -13,16 +13,17 @@ const CameraPage = () => {
   const [countdown, setCountdown] = useState(null);
   const [loading, setLoading] = useState(false);
   const countdownRef = useRef(null); // Menyimpan referensi interval
+  const [nama, setNama] = useState('');
 
-  useEffect(() => {
-    startVideo();
-    return () => {
-      stopStream();
-      if (countdownRef.current) {
-        clearInterval(countdownRef.current); // Hentikan countdown jika component unmount
-      }
-    };
-  }, []);
+  // useEffect(() => {
+  //   startVideo();
+  //   return () => {
+  //     stopStream();
+  //     if (countdownRef.current) {
+  //       clearInterval(countdownRef.current); // Hentikan countdown jika component unmount
+  //     }
+  //   };
+  // }, []);
 
   const startVideo = async () => {
     setVideoSrc(null); // Reset video source
@@ -57,6 +58,18 @@ const CameraPage = () => {
         return prev - 1; // Update countdown
       });
     }, 1000);
+  };
+
+  const handleNama = (event) => {
+    const field = event.target.value;
+
+    const isValid = /^[a-z]+$/.test(field);
+
+    if (isValid || field === "") {
+      setNama(field);
+    } else {
+      console.warn("Hanya huruf kecil yang diperbolehkan!");
+    }
   };
 
   const capturePhoto = () => {
@@ -171,6 +184,30 @@ const CameraPage = () => {
     }, 1000);
   };
 
+  const handleSummit = (event) => {
+    event.preventDefault();
+    if (nama === "") {
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal Mengambil Gambar',
+        text: 'Silahkan isi Name anda',
+        confirmButtonText: 'Coba Lagi',
+        timer: 3000
+      }).then(() => {
+        router.push('/');
+      });
+    } else {
+      startVideo();
+      return () => {
+        stopStream();
+        if (countdownRef.current) {
+          clearInterval(countdownRef.current); // Hentikan countdown jika component unmount
+        }
+      };
+    }
+
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl md:text-4xl font-bold mb-6 text-center">Ambil Foto</h1>
@@ -191,7 +228,22 @@ const CameraPage = () => {
             {countdown}
           </motion.div>
         )}
+        <div class="mt-4">
+          <label class="block text-gray-700 text-sm font-bold mb-2" htmlFor='nama'>
+            Name
+          </label>
+          <input onChange={handleNama} class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="nama" type="text" placeholder="Name" />
+        </div>
+        <button class="relative inline-flex items-center justify-center p-0.5 mt-2 me-2 overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-purple-600 to-blue-500 group-hover:from-purple-600 group-hover:to-blue-500 hover:text-white  focus:ring-4 focus:outline-none focus:ring-blue-300 "
+          onClick={handleSummit}
+          disabled={!nama}
+        >
+          <span class="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white  rounded-md group-hover:bg-opacity-0">
+            capture
+          </span>
+        </button>
       </div>
+
       {loading && <Loading />}
     </div>
   );
