@@ -121,6 +121,7 @@ const Gallery = () => {
             />
             <img
               src={`${process.env.NEXT_PUBLIC_API_URL_NGROK}all_image/${image}`}
+              className="w-full h-full object-cover"
               alt={`${process.env.NEXT_PUBLIC_API_URL_NGROK}all_image/${image}`}
             />
             {/* <Watermark imageUrl={`${process.env.NEXT_PUBLIC_API_URL_NGROK}all_image/${image}`} /> */}
