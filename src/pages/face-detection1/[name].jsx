@@ -170,6 +170,7 @@ function App() {
                     confirmButtonText: 'Coba Lagi',
                     timer: 3000
                 });
+                setImages([]);
             }
         }, 1000);
     };
