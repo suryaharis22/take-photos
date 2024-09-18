@@ -249,42 +249,30 @@ function App() {
     }, []);
 
     return (
-        <div className="App">
-            <p>Posisi wajah: {faceInFrame ? 'didalam kotak true' : 'Di luar kotak'}</p>
-            <p>Jarak wajah: {distanceValid ? 'true (35cm-40cm)' : 'Tidak valid'}</p>
-            <p>Sudut wajah: {angleValid ? 'Sejajar true' : 'Tidak sejajar'}</p>
-            <header className="App-header">
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+            <div className="bg-white shadow-md rounded-lg p-6 mb-4 w-full max-w-md text-center">
+                <p className="text-lg font-semibold">Posisi wajah: {faceInFrame ? 'Didalam kotak (true)' : 'Di luar kotak'}</p>
+                <p className="text-lg font-semibold">Jarak wajah: {distanceValid ? 'Valid (35cm-40cm)' : 'Tidak valid'}</p>
+                <p className="text-lg font-semibold">Sudut wajah: {angleValid ? 'Sejajar (true)' : 'Tidak sejajar'}</p>
+            </div>
+            <div className="relative w-full max-w-md">
                 <Webcam
                     ref={webcamRef}
-                    mirrored={true} // Mengaktifkan mirror mode
+                    mirrored={true}
+                    className="rounded-lg shadow-md w-full"
                     style={{
-                        position: 'absolute',
-                        marginLeft: 'auto',
-                        marginRight: 'auto',
-                        left: 0,
-                        right: 0,
-                        textAlign: 'center',
-                        zIndex: 9,
-                        width: 640,
-                        height: 480,
+                        position: 'relative',
+                        zIndex: 10,
                     }}
                 />
-
                 <canvas
                     ref={canvasRef}
+                    className="absolute top-0 left-0 w-full h-full rounded-lg"
                     style={{
-                        position: 'absolute',
-                        marginLeft: 'auto',
-                        marginRight: 'auto',
-                        left: 0,
-                        right: 0,
-                        textAlign: 'center',
                         zIndex: 9,
-                        width: 640,
-                        height: 480,
                     }}
-                > </canvas>
-            </header>
+                />
+            </div>
         </div>
     );
 }
