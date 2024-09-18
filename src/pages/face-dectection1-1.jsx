@@ -11,6 +11,7 @@ import { triggerTraining } from "@/utils/trigerTrening";
 
 function App() {
     const router = useRouter();
+    const { name } = router.query;
     const webcamRef = useRef(null);
     const canvasRef = useRef(null);
     const [dataFace, setDataFace] = useState();
@@ -151,7 +152,7 @@ function App() {
             try {
                 await axios.post(`${process.env.NEXT_PUBLIC_API_URL_NGROK}upload_compare`, dataPhoto, {
                     headers: {
-                        'Content-Type': 'multipart/form-data'
+                        'Content-Type': 'multipart/form-data',
                     }
                 });
 
