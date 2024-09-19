@@ -180,7 +180,7 @@ function App() {
 
             // Make the POST request to the upload endpoint
             const response = await axios.post(
-                `${process.env.NEXT_PUBLIC_API_URL_OMTRI}upload`,
+                `https://faceid2.panorasnap.com/upload`,
                 dataPhoto,
                 { headers }
             );
