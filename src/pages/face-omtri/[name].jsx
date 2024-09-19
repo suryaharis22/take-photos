@@ -159,45 +159,36 @@ function App() {
         formData.append('name', NameUser);  // Add name field
         formData.append('image', blob, uniqueName);
 
-        dataPhoto.append('name', NameUser);  // Append name to the form data
         try {
+            const response = await fetch("https://faceid2.panorasnap.com/upload", {
+                method: "POST",
+                body: formData,  // Use the formData object as the request body
+                headers: {
+                    "accept": "/",
+                    "accept-language": "en-US,en;q=0.9",
+                    "priority": "u=1, i",
+                    "sec-ch-ua": "\"Chromium\";v=\"128\", \"Not;A=Brand\";v=\"24\", \"Microsoft Edge\";v=\"128\"",
+                    "sec-ch-ua-mobile": "?0",
+                    "sec-ch-ua-platform": "\"Windows\"",
+                    "sec-fetch-dest": "empty",
+                    "sec-fetch-mode": "cors",
+                    "sec-fetch-site": "same-origin",
+                    "Referer": "https://faceid2.panorasnap.com/",
+                    "Referrer-Policy": "strict-origin-when-cross-origin"
+                }
+            });
 
-
-            // Set custom headers
-            const headers = {
-                'Content-Type': 'multipart/form-data',
-                'accept': '/',
-                'accept-language': 'en-US,en;q=0.9',
-                'priority': 'u=1, i',
-                'sec-ch-ua': '"Chromium";v="128", "Not;A=Brand";v="24", "Microsoft Edge";v="128"',
-                'sec-ch-ua-mobile': '?0',
-                'sec-ch-ua-platform': '"Windows"',
-                'sec-fetch-dest': 'empty',
-                'sec-fetch-mode': 'cors',
-                'sec-fetch-site': 'same-origin',
-                'Referer': 'https://faceid2.panorasnap.com/',
-                'Referrer-Policy': 'strict-origin-when-cross-origin',
-            };
-
-            // Make the POST request to the upload endpoint
-            const response = await axios.post(
-                `https://faceid2.panorasnap.com/upload`,
-                dataPhoto,
-                { headers }
-            );
-
-            // Handle the response from the server
-            if (response.status === 200) {
-                console.log('Response:', response.data);
-                return response.data;
+            // Handle the response
+            if (response.ok) {
+                const result = await response.json();
+                console.log('File uploaded successfully:', result);
+                return result;
             } else {
-                console.log('Error:', response.data);
-                // return response.data;
+                console.error('Error uploading file:', response.status, response.statusText);
             }
 
         } catch (error) {
-            // Handle errors
-            console.error('Error uploading file:', error);
+            console.error('Error during upload:', error);
             throw error;
         }
     };
