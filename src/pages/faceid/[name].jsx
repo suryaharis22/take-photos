@@ -84,8 +84,6 @@ function App() {
             // Loop untuk menangkap foto sebanyak 4 kali tanpa jeda
             capturePhoto();
 
-        } else {
-            console.log("wajah tidak terdeteksi");
         }
     }, [faceInFrame, distanceValid, angleValid]);
 
@@ -248,8 +246,6 @@ function App() {
                 ctx.strokeStyle = 'rgba(0, 0, 0, 0)';  // Membuat kotak transparan
                 ctx.rect(boxX, boxY, boxWidth, boxHeight);
                 ctx.stroke();
-            } else {
-                console.warn("Canvas element not available.");
             }
         }
     };
