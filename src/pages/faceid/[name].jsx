@@ -8,6 +8,7 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { triggerTraining } from "@/utils/trigerTrening";
+import Loading from "@/components/Loading";
 
 function App() {
     const router = useRouter();
@@ -20,6 +21,7 @@ function App() {
     const [distanceValid, setDistanceValid] = useState(false);
     const [angleValid, setAngleValid] = useState(false);
     const [images, setImages] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (dataFace) {
@@ -83,6 +85,7 @@ function App() {
         if (faceInFrame && distanceValid && angleValid && images.length === 0) {
             // Loop untuk menangkap foto sebanyak 4 kali tanpa jeda
             capturePhoto();
+            setLoading(true);
 
         }
     }, [faceInFrame, distanceValid, angleValid]);
@@ -170,14 +173,19 @@ function App() {
                     icon: 'success',
                     title: 'Upload Berhasil',
                     text: 'Data Berhasil',
+                    showConfirmButton: false,
                     timer: 1500
                 })
                     .then(() => {
+                        setLoading(false);
+                        setImages([]);
                         router.push(`/photo-result2?matches=${urlImage}`);
                     })
             }
 
         } catch (error) {
+            setLoading(false);
+            setImages([]);
             console.error('Error uploading file:', error);
             throw error;
         }
@@ -258,16 +266,19 @@ function App() {
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
 
-            <div className="relative w-full max-w-md">
+
+            {loading ? (
+                <Loading />
+            ) : (<div className="relative w-full max-w-md">
                 {!faceInFrame && (
-                    <p style={{ zIndex: 10, }} className="text-sm font-semibold text-red-500 absolute top-0 left-50 right-50">Posisi kan Wajah ditengah kotak</p>
+                    <p style={{ zIndex: 7, }} className="text-sm font-semibold text-red-500 absolute top-0 left-50 right-50">Posisi kan Wajah ditengah kotak</p>
                 )}
                 {!distanceValid && (
-                    <p style={{ zIndex: 10, }} className="text-sm font-semibold text-red-500 absolute top-4 left-50 right-50">Jarak antar Kamer terlalu jauh/dekat</p>
+                    <p style={{ zIndex: 7, }} className="text-sm font-semibold text-red-500 absolute top-4 left-50 right-50">Jarak antar Kamer terlalu jauh/dekat</p>
 
                 )}
                 {!angleValid && (
-                    <p style={{ zIndex: 10, }} className="text-sm font-semibold text-red-500 absolute top-8 left-50 right-50">Sudut wajah: Tidak sejajar</p>
+                    <p style={{ zIndex: 7, }} className="text-sm font-semibold text-red-500 absolute top-8 left-50 right-50">Sudut wajah: Tidak sejajar</p>
 
                 )}
 
@@ -291,13 +302,14 @@ function App() {
                     <div
                         className="absolute top-0 left-0 right-0 flex flex-col items-center justify-center p-4 font-bold bg-black  w-full h-full rounded-lg "
                         style={{
-                            zIndex: 10,
+                            zIndex: 7,
                         }}>
 
                         <img src="/loading.gif" alt="Loading..." className="opacity-100" width={250} height={250} />
                     </div>
                 )}
             </div>
+            )}
         </div>
     );
 }

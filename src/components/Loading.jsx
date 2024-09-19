@@ -1,7 +1,7 @@
 
 const Loading = () => {
     return (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div style={{ zIndex: 10, }} className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div role="status" className="flex flex-col items-center">
                 <svg
                     aria-hidden="true"
