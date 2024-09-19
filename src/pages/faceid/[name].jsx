@@ -85,7 +85,7 @@ function App() {
             capturePhoto();
 
         } else {
-            console.log("Wajah tidak terdeteksi");
+            console.log("wajah tidak terdeteksi");
         }
     }, [faceInFrame, distanceValid, angleValid]);
 
@@ -135,60 +135,56 @@ function App() {
     }, [images]);
 
     const uploadFile = async (base64Image) => {
-        // Ensure base64Image is a valid Base64 string
+        // base64Image is a valid string
         if (typeof base64Image !== 'string') {
             console.error('Provided image is not a valid Base64 string.');
             return;
         }
 
         // Convert Base64 to binary (Blob)
-        const binaryString = atob(base64Image.split(',')[1]);  // Decode Base64
+        const binaryString = atob(base64Image.split(',')[1]);
         const len = binaryString.length;
         const bytes = new Uint8Array(len);
 
+
         for (let i = 0; i < len; i++) {
-            bytes[i] = binaryString.charCodeAt(i);  // Convert to bytes
+            bytes[i] = binaryString.charCodeAt(i);
         }
 
         // Create a Blob from the binary data
         const blob = new Blob([bytes], { type: 'image/jpeg' });  // Use the appropriate MIME type
         const uniqueName = `${Date.now()}${Math.floor(Math.random() * 10000)}.jpeg`;
 
-        // Create FormData to append name and Blob image
         let formData = new FormData();
         formData.append('name', NameUser);  // Add name field
         formData.append('image', blob, uniqueName);
 
         try {
-            const response = await fetch("https://faceid2.panorasnap.com/upload", {
-                method: "POST",
-                body: formData,  // Use the formData object as the request body
+            // Endpoint untuk meng-upload
+            const response = await axios.post('https://faceid2.panorasnap.com/upload', formData, {
                 headers: {
-                    "accept": "/",
-                    "accept-language": "en-US,en;q=0.9",
-                    "priority": "u=1, i",
-                    "sec-ch-ua": "\"Chromium\";v=\"128\", \"Not;A=Brand\";v=\"24\", \"Microsoft Edge\";v=\"128\"",
-                    "sec-ch-ua-mobile": "?0",
-                    "sec-ch-ua-platform": "\"Windows\"",
-                    "sec-fetch-dest": "empty",
-                    "sec-fetch-mode": "cors",
-                    "sec-fetch-site": "same-origin",
-                    "Referer": "https://faceid2.panorasnap.com/",
-                    "Referrer-Policy": "strict-origin-when-cross-origin"
-                }
+                    'Content-Type': 'multipart/form-data',
+                },
             });
+            let urlImage = response?.data?.redirect_url;
 
-            // Handle the response
-            if (response.ok) {
-                const result = await response.json();
-                console.log('File uploaded successfully:', result);
-                return result;
-            } else {
-                console.error('Error uploading file:', response.status, response.statusText);
+
+
+            if (response.status === 200) {
+                urlImage = urlImage.replace('matches?matches=', '');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Upload Berhasil',
+                    text: 'Data Berhasil',
+                    timer: 1500
+                })
+                    .then(() => {
+                        router.push(`/photo-result2?matches=${urlImage}`);
+                    })
             }
 
         } catch (error) {
-            console.error('Error during upload:', error);
+            console.error('Error uploading file:', error);
             throw error;
         }
     };
@@ -269,28 +265,46 @@ function App() {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-            <div className="bg-white shadow-md rounded-lg p-6 mb-4 w-full max-w-md text-center">
-                <p className="text-lg font-semibold">Posisi wajah: {faceInFrame ? 'Didalam kotak (true)' : 'Di luar kotak'}</p>
-                <p className="text-lg font-semibold">Jarak wajah: {distanceValid ? 'Valid (35cm-40cm)' : 'Tidak valid'}</p>
-                <p className="text-lg font-semibold">Sudut wajah: {angleValid ? 'Sejajar (true)' : 'Tidak sejajar'}</p>
-            </div>
-            <div className="relative w-full max-w-md">
+
+            <div className="relative w-full min-h-screen mt-10">
+                {!faceInFrame && (
+                    <p style={{ zIndex: 10, }} className="text-sm font-semibold text-red-500 absolute top-0 left-50 right-50">Posisi kan Wajah ditengah kotak</p>
+                )}
+                {!distanceValid && (
+                    <p style={{ zIndex: 10, }} className="text-sm font-semibold text-red-500 absolute top-4 left-50 right-50">Jarak antar Kamer terlalu jauh/dekat</p>
+
+                )}
+                {!angleValid && (
+                    <p style={{ zIndex: 10, }} className="text-sm font-semibold text-red-500 absolute top-8 left-50 right-50">Sudut wajah: Tidak sejajar</p>
+
+                )}
+
                 <Webcam
                     ref={webcamRef}
                     mirrored={true}
                     className="rounded-lg shadow-md w-full"
                     style={{
                         position: 'relative',
-                        zIndex: 10,
+                        zIndex: 6,
                     }}
                 />
                 <canvas
                     ref={canvasRef}
                     className="absolute top-0 left-0 w-full h-full rounded-lg"
                     style={{
-                        zIndex: 9,
+                        zIndex: 5,
                     }}
                 />
+                {!dataFace && (
+                    <div
+                        className="absolute top-0 left-0 right-0 flex flex-col items-center justify-center p-4 font-bold bg-black  w-full h-full rounded-lg "
+                        style={{
+                            zIndex: 10,
+                        }}>
+
+                        <img src="/loading.gif" alt="Loading..." className="opacity-100" width={250} height={250} />
+                    </div>
+                )}
             </div>
         </div>
     );
