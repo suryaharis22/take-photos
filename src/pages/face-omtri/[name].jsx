@@ -142,23 +142,24 @@ function App() {
         }
 
         // Convert Base64 to binary (Blob)
-        const binaryString = atob(base64Image.split(',')[1]); // Split and decode the Base64 string
+        const binaryString = atob(base64Image.split(',')[1]);  // Decode Base64
         const len = binaryString.length;
         const bytes = new Uint8Array(len);
 
         for (let i = 0; i < len; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
+            bytes[i] = binaryString.charCodeAt(i);  // Convert to bytes
         }
 
         // Create a Blob from the binary data
-        const blob = new Blob([bytes], { type: 'image/webp' }); // Since it's a webp image, specify the type
-        const uniqueName = `${Date.now()}${Math.floor(Math.random() * 10000)}.webp`;
+        const blob = new Blob([bytes], { type: 'image/jpeg' });  // Use the appropriate MIME type
+        const uniqueName = `${Date.now()}${Math.floor(Math.random() * 10000)}.jpeg`;
 
-        // Create FormData to send file and name
-        let dataPhoto = new FormData();
+        // Create FormData to append name and Blob image
+        let formData = new FormData();
+        formData.append('name', NameUser);  // Add name field
+        formData.append('image', blob, uniqueName);
+
         dataPhoto.append('name', NameUser);  // Append name to the form data
-        dataPhoto.append('image', blob, uniqueName);
-
         try {
 
 
