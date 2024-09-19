@@ -89,10 +89,6 @@ function App() {
         }
     }, [faceInFrame, distanceValid, angleValid]);
 
-
-
-
-
     const capturePhoto = () => {
         if (webcamRef.current && webcamRef.current.getScreenshot) {
             const imageSrc = webcamRef.current.getScreenshot();
@@ -266,7 +262,7 @@ function App() {
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
 
-            <div className="relative w-full min-h-screen mt-10">
+            <div className="relative w-full max-w-md">
                 {!faceInFrame && (
                     <p style={{ zIndex: 10, }} className="text-sm font-semibold text-red-500 absolute top-0 left-50 right-50">Posisi kan Wajah ditengah kotak</p>
                 )}
