@@ -72,16 +72,19 @@ const MyPhoto = () => {
             return;
         }
 
-        images.forEach((photo) => {
-            const link = document.createElement('a');
-            link.href = `${process.env.NEXT_PUBLIC_API_URL_NGROK}matched_image/${photo}`;
-            link.download = photo; // Nama file yang akan diunduh
-            link.style.display = 'none'; // Sembunyikan link dari tampilan
-            document.body.appendChild(link);
-            link.click(); // Klik link untuk memulai unduhan
-            document.body.removeChild(link); // Hapus link setelah unduhan dimulai
+        images.forEach((photo, index) => {
+            setTimeout(() => {
+                const link = document.createElement('a');
+                link.href = `${process.env.NEXT_PUBLIC_API_URL_OMTRI}images/${photo}`;
+                link.download = photo; // Nama file yang akan diunduh
+                link.style.display = 'none'; // Sembunyikan link dari tampilan
+                document.body.appendChild(link);
+                link.click(); // Klik link untuk memulai unduhan
+                document.body.removeChild(link); // Hapus link setelah unduhan dimulai
+            }, index * 500); // Beri jeda 500ms antara setiap unduhan
         });
     };
+
 
     return (
         <div className="container mx-auto p-4">
@@ -117,8 +120,8 @@ const MyPhoto = () => {
                             className="relative w-40 h-40 bg-white shadow-md rounded-lg overflow-hidden cursor-pointer transform transition duration-300 hover:scale-105 focus-within:scale-105"
                         >
                             <img
-                                src={`${process.env.NEXT_PUBLIC_API_URL_NGROK}matched_image/${photo}`}
-                                alt={`Photo ${index + 1}`}
+                                src={`${process.env.NEXT_PUBLIC_API_URL_OMTRI}images/${photo}`}
+                                alt={`${process.env.NEXT_PUBLIC_API_URL_OMTRI}images/${photo}`}
                                 className="w-full h-full object-cover"
                             />
                             {/* {infoPayment?.status === 'success' ? (

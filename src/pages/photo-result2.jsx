@@ -34,6 +34,8 @@ const CardImages = () => {
   };
 
   const handleCheckboxChange = (image) => {
+    console.log(selectedImages);
+
     setSelectedImages((prevSelectedImages) => {
       if (prevSelectedImages.includes(image)) {
         return prevSelectedImages.filter((img) => img !== image);
@@ -101,7 +103,7 @@ const CardImages = () => {
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          onClick={() => router.push("/home2")}
+          onClick={() => router.push("/")}
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold p-2 rounded-lg"
         >
           <IconHome className="w-10 h-10" />
@@ -135,8 +137,9 @@ const CardImages = () => {
                 onChange={() => handleCheckboxChange(photo)}
               />
               <img
-                src={`https://faceid2.panorasnap.com/images/${photo}`}
-                alt={`https://faceid2.panorasnap.com/images/${photo}`}
+                src={`${process.env.NEXT_PUBLIC_API_URL_OMTRI}images/${photo}`}
+                alt={`${process.env.NEXT_PUBLIC_API_URL_OMTRI}images/${photo}`}
+                className="w-full h-full object-cover"
               />
               {/* <Watermark imageUrl={`${process.env.NEXT_PUBLIC_API_URL_NGROK}matched_image/${photo}`} /> */}
 

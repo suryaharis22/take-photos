@@ -158,7 +158,7 @@ function App() {
 
         try {
             // Endpoint untuk meng-upload
-            const response = await axios.post('https://faceid2.panorasnap.com/upload', formData, {
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL_OMTRI}upload`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -214,44 +214,44 @@ function App() {
             webcamRef.current.video.width = videoWidth;
             webcamRef.current.video.height = videoHeight;
 
-            canvasRef.current.width = videoWidth;
-            canvasRef.current.height = videoHeight;
-
-            const face = await net.estimateFaces(video);
-
-            // Membalik koordinat X untuk setiap titik deteksi karena webcam dalam mode mirrored
-            const mirroredFace = face.map(f => {
-                return {
-                    ...f,
-                    scaledMesh: f.scaledMesh.map(point => {
-                        const [x, y, z] = point;
-                        return [videoWidth - x, y, z]; // Balik koordinat X
-                    }),
-                    annotations: Object.keys(f.annotations).reduce((acc, key) => {
-                        acc[key] = f.annotations[key].map(point => {
-                            const [x, y, z] = point;
-                            return [videoWidth - x, y, z]; // Balik koordinat X
-                        });
-                        return acc;
-                    }, {})
-                };
-            });
-
-            setDataFace(mirroredFace);
-
-            // Pastikan canvasRef sudah terisi
+            // Ensure the canvas is available before accessing its properties
             if (canvasRef.current) {
+                canvasRef.current.width = videoWidth;
+                canvasRef.current.height = videoHeight;
+
+                const face = await net.estimateFaces(video);
+
+                // Mirror X coordinates for every detection point
+                const mirroredFace = face.map(f => {
+                    return {
+                        ...f,
+                        scaledMesh: f.scaledMesh.map(point => {
+                            const [x, y, z] = point;
+                            return [videoWidth - x, y, z]; // Flip X coordinates
+                        }),
+                        annotations: Object.keys(f.annotations).reduce((acc, key) => {
+                            acc[key] = f.annotations[key].map(point => {
+                                const [x, y, z] = point;
+                                return [videoWidth - x, y, z]; // Flip X coordinates
+                            });
+                            return acc;
+                        }, {})
+                    };
+                });
+
+                setDataFace(mirroredFace);
+
                 const ctx = canvasRef.current.getContext("2d");
                 ctx.clearRect(0, 0, videoWidth, videoHeight);
 
-                // Gambar kotak di tengah canvas
+                // Draw a transparent box in the center of the canvas
                 const boxWidth = 100;
                 const boxHeight = 100;
                 const boxX = (videoWidth - boxWidth) / 2;
                 const boxY = (videoHeight - boxHeight) / 2;
                 ctx.beginPath();
                 ctx.lineWidth = 2;
-                ctx.strokeStyle = 'rgba(0, 0, 0, 0)';  // Membuat kotak transparan
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0)';  // Transparent box
                 ctx.rect(boxX, boxY, boxWidth, boxHeight);
                 ctx.stroke();
             }
