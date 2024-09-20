@@ -17,7 +17,8 @@ export const triggerTraining3 = async (router) => {
                 router.push('/photo-result3')
             })
         }
-        // setTimeout(() => router.push('/photo-result'), 5000);
+        // setTimeout(() => router.push('/photo-result'), 5000);...
+
     } catch (error) {
         Swal.fire({
             icon: 'error',
