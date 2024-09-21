@@ -7,9 +7,9 @@ import axios from "axios";
 import { useRouter } from "next/router";
 import Loading from "@/components/Loading";
 
-function FaceId() {
+function FaceId({ initialNameUser }) {
   const router = useRouter();
-  const NameUser = router.query.name;
+  const NameUser = router.query.name || initialNameUser;
 
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
@@ -20,7 +20,6 @@ function FaceId() {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Function to validate face data: Distance, Angle, and Position
   const validateFaceData = () => {
     if (!dataFace) return;
 
@@ -38,7 +37,7 @@ function FaceId() {
       setDistanceValid(distance >= 400 && distance <= 500);
     }
 
-    if (noseTip && leftCheek && rightCheek && canvasRef.current) {
+    if (noseTip && leftCheek && rightCheek) {
       const cheekDifference = Math.abs(leftCheek[2] - rightCheek[2]);
       setAngleValid(cheekDifference <= 3);
 
@@ -50,13 +49,12 @@ function FaceId() {
         noseX > boxX && noseX < boxX + 200 && noseY > boxY && noseY < boxY + 200
       );
     }
-  }
+  };
 
   useEffect(() => {
     if (dataFace) validateFaceData();
   }, [dataFace]);
 
-  // Capture photo when all conditions are met
   useEffect(() => {
     if (faceInFrame && distanceValid && angleValid && images.length === 0) {
       capturePhoto();
@@ -64,7 +62,6 @@ function FaceId() {
     }
   }, [faceInFrame, distanceValid, angleValid]);
 
-  // Capture a photo from the webcam
   const capturePhoto = () => {
     if (webcamRef.current?.getScreenshot) {
       const imageSrc = webcamRef.current.getScreenshot();
@@ -80,7 +77,6 @@ function FaceId() {
     }
   };
 
-  // Upload image to server
   const uploadFile = async (image) => {
     try {
       const binaryString = atob(image.split(",")[1]);
@@ -124,7 +120,7 @@ function FaceId() {
 
   useEffect(() => {
     if (images.length > 0) {
-      uploadFile(images[0]); // Upload only the first image
+      uploadFile(images[0]);
     }
   }, [images]);
 
@@ -213,6 +209,16 @@ function FaceId() {
       )}
     </div>
   );
+}
+
+export async function getServerSideProps(context) {
+  const { name } = context.query;
+
+  return {
+    props: {
+      initialNameUser: name || "",
+    },
+  };
 }
 
 export default FaceId;
