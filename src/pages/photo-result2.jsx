@@ -25,11 +25,6 @@ export default function CardImages() {
   });
 
   useEffect(() => {
-    console.log(watermarkedImages);
-    console.log(selectedImages);
-  }, [watermarkedImages, selectedImages]);
-
-  useEffect(() => {
     const fetchImages = async () => {
       setLoading(true);
       try {
