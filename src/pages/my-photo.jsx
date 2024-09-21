@@ -112,7 +112,7 @@ const MyPhoto = () => {
             {images.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 overflow-y-auto h-screen">
                     {images.map((photo, index) => (
-                        <div
+                        <Link href={`${process.env.NEXT_PUBLIC_API_URL_NGROK}matched_image/${photo}`} download
                             key={index}
                             className="relative w-40 h-40 bg-white shadow-md rounded-lg overflow-hidden cursor-pointer transform transition duration-300 hover:scale-105 focus-within:scale-105"
                         >
@@ -130,7 +130,7 @@ const MyPhoto = () => {
                             ) : (
                                 <Watermark imageUrl={`${process.env.NEXT_PUBLIC_API_URL_NGROK}matched_image/${photo}`} />
                             )} */}
-                        </div>
+                        </Link>
                     ))}
                 </div>
             ) : (

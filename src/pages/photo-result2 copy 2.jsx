@@ -6,8 +6,6 @@ import Swal from "sweetalert2";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { IconCash, IconDownload, IconHome } from "@tabler/icons-react";
-import Image from "next/image";
-import Loading from "@/components/Loading";
 
 const baseUrl = 'https://faceid.panorasnap.com/worker/matched_image/';
 const logoUrl = '/logo.png';
@@ -17,21 +15,10 @@ export default function CardImages() {
   const [selectedImages, setSelectedImages] = useState([]);
   const [watermarkedImages, setWatermarkedImages] = useState([]);
   const [photos, setPhotos] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [paymentInfo, setPaymentInfo] = useState({
-    cardNumber: "",
-    expiryDate: "",
-    cvv: "",
-  });
 
-  useEffect(() => {
-    console.log(watermarkedImages);
-    console.log(selectedImages);
-  }, [watermarkedImages, selectedImages]);
 
   useEffect(() => {
     const fetchImages = async () => {
-      setLoading(true);
       try {
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL_NGROK}get_matched_images`);
         const imageUrls = response.data.matched_images;
@@ -40,13 +27,11 @@ export default function CardImages() {
         const imgArray = await Promise.all(imageUrls.map(async (img) => {
           const imgSrc = `${baseUrl}${img}`;
           const watermarkedImg = await createWatermarkedImage(imgSrc);
-          return { imgwm: watermarkedImg, imgorg: img };
-          // return watermarkedImg;
+          return watermarkedImg;
         }));
+
         setWatermarkedImages(imgArray);
-        setLoading(false);
       } catch (error) {
-        setLoading(false);
         console.error('Error fetching images:', error);
         Swal.fire('Error', 'Failed to load images.', 'error');
       }
@@ -74,7 +59,7 @@ export default function CardImages() {
         const logo = new window.Image();
         logo.src = logoUrl;
         logo.onload = () => {
-          const logoWidth = 300; // Ganti dengan ukuran logo yang diinginkan
+          const logoWidth = 100; // Ganti dengan ukuran logo yang diinginkan
           const logoHeight = (logo.height / logo.width) * logoWidth; // Menjaga rasio aspek
 
           // Hitung posisi logo di tengah
@@ -101,6 +86,7 @@ export default function CardImages() {
     setPaymentInfo({ ...paymentInfo, [name]: value });
   };
 
+
   const handleCheckboxChange = (image) => {
     setSelectedImages((prevSelectedImages) => {
       if (prevSelectedImages.includes(image)) {
@@ -118,15 +104,15 @@ export default function CardImages() {
         <div>
           <div class="mb-2 text-left">
             <label for="cardNumber" class="block mb-2 text-sm font-medium text-gray-900">Card Number</label>
-            <input id="cardNumber" type="text" placeholder="Card Number" value="0000 0000 0000 0000" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"/>
+            <input id="cardNumber" type="text" placeholder="Card Number" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"/>
           </div>
           <div class="mb-2 text-left">
             <label for="expiryDate" class="block mb-2 text-sm font-medium text-gray-900">Expiry Date (MM/YY)</label>
-            <input id="expiryDate" type="text" placeholder="Expiry Date" value="00/00" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"/>
+            <input id="expiryDate" type="text" placeholder="Expiry Date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"/>
           </div>
           <div class="mb-2 text-left">
             <label for="cvv" class="block mb-2 text-sm font-medium text-gray-900">CVV</label>
-            <input id="cvv" type="text" placeholder="CVV" value="000" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"/>
+            <input id="cvv" type="text" placeholder="CVV" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"/>
           </div>
         </div>
       `,
@@ -188,27 +174,28 @@ export default function CardImages() {
       </div>
 
       {/* Kontainer untuk card images */}
-      {watermarkedImages.length > 0 ? (
+      {photos.length > 0 ? (
         <div className="overflow-y-auto h-screen pb-40 flex flex-wrap justify-center ">
-          {watermarkedImages.map((img) => (
+          {photos.map((photo, index) => (
             <label
-              htmlFor={`${img.imgorg}`}
-              key={img.imgorg}
+              htmlFor={`${photo}`}
+              key={index}
               className="relative m-10 w-40 h-40 bg-white shadow-md rounded-lg overflow-hidden cursor-pointer transform transition duration-300 hover:scale-105 focus-within:scale-105"
             >
               <input
                 type="checkbox"
                 className="hidden peer"
-                id={`${img.imgorg}`}
-                onChange={() => handleCheckboxChange(img.imgorg)}
+                id={`${photo}`}
+                onChange={() => handleCheckboxChange(photo)}
               />
-
               <img
-                src={img.imgwm}
-                alt={`Watermarked ${img.imgorg}`}
                 className="w-full h-full object-cover"
+                src={`${process.env.NEXT_PUBLIC_API_URL_NGROK}/matched_image/${photo}`}
+                alt={`${process.env.NEXT_PUBLIC_API_URL_NGROK}/matched_image/${photo}`}
               />
+              {/* <Watermark imageUrl={`${process.env.NEXT_PUBLIC_API_URL_NGROK}matched_image/${photo}`} /> */}
 
+              {/* Highlight checkbox if selected */}
               <div className="absolute inset-0 flex justify-center items-center bg-blue-500 bg-opacity-30 opacity-0 peer-checked:opacity-100 transition duration-300">
                 <span className="text-white font-bold text-lg">Selected</span>
               </div>
@@ -220,7 +207,6 @@ export default function CardImages() {
           <p className="text-gray-400 text-lg">No images. Please scan again</p>
         </div>
       )}
-      {loading && <Loading />}
     </div>
   );
 }
