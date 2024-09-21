@@ -47,7 +47,7 @@ const Start = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         const name = result.value;
-        router.push(`/faceid/${encodeURIComponent(name)}`);
+        router.push(`/faceid/${name}`);
       }
     });
   };

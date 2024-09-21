@@ -124,12 +124,12 @@ const CardImages = () => {
 
       {/* Kontainer untuk card images */}
       {photos.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 overflow-y-auto h-screen pb-40">
+        <div className="overflow-y-auto h-screen pb-40 flex flex-wrap justify-center ">
           {photos.map((photo, index) => (
             <label
               htmlFor={`${photo}`}
               key={index}
-              className="relative w-40 h-40 bg-white shadow-md rounded-lg overflow-hidden cursor-pointer transform transition duration-300 hover:scale-105 focus-within:scale-105"
+              className="relative m-10 w-40 h-40 bg-white shadow-md rounded-lg overflow-hidden cursor-pointer transform transition duration-300 hover:scale-105 focus-within:scale-105"
             >
               <input
                 type="checkbox"
