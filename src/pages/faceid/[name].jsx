@@ -6,6 +6,7 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import { useRouter } from "next/router";
 import Loading from "@/components/Loading";
+import { motion } from "framer-motion";
 
 function FaceId() {
   const router = useRouter();
@@ -170,11 +171,12 @@ function FaceId() {
       ) : (
         <div className="relative w-full max-w-md">
           {!dataFace && (
-            <div
-              className="absolute top-0 left-0 right-0 flex flex-col items-center justify-center p-4 font-bold bg-black  w-full h-full rounded-lg "
-              style={{
-                zIndex: 7,
-              }}
+            <motion.div
+              className="absolute top-0 left-0 right-0 flex flex-col items-center justify-center p-4 font-bold bg-black w-full h-full rounded-lg"
+              style={{ zIndex: 7 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
             >
               <img
                 src="/loading.gif"
@@ -183,8 +185,26 @@ function FaceId() {
                 width={250}
                 height={250}
               />
-            </div>
+            </motion.div>
           )}
+
+          {/* Area Face oval dengan animasi */}
+          {/* <motion.div
+            className="absolute top-0 left-0 right-0 w-full h-full rounded-lg"
+            style={{ zIndex: 6 }}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <motion.div
+              className={`bg-transparent w-[150px] h-[220px] rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border-dashed border-[4px] ${faceInFrame && distanceValid && angleValid ? "border-green-500" : "border-red-500"
+                }`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            ></motion.div>
+          </motion.div> */}
+
           <Webcam
             ref={webcamRef}
             mirrored
@@ -194,7 +214,8 @@ function FaceId() {
             ref={canvasRef}
             className="absolute top-0 left-0 w-full h-full rounded-lg"
           />
-          {!faceInFrame && (
+          {/* Pesan error jika diperlukan */}
+          {/* {!faceInFrame && (
             <p className="text-sm font-semibold text-red-500 absolute top-0">
               Position your face in the box
             </p>
@@ -208,7 +229,7 @@ function FaceId() {
             <p className="text-sm font-semibold text-red-500 absolute top-8">
               Face not aligned correctly
             </p>
-          )}
+          )} */}
         </div>
       )}
     </div>

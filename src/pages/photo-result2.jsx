@@ -185,12 +185,22 @@ export default function CardImages() {
       {/* Kontainer untuk card images */}
       {watermarkedImages.length > 0 ? (
         <div className="overflow-y-auto h-screen pb-40 flex flex-wrap justify-center ">
-          {watermarkedImages.map((img) => (
-            <label
+          {/* Card images */}
+          {watermarkedImages.map((img, index) => (
+            <motion.label
+              initial={{ opacity: 0, scale: 0.9 }} // Sedikit lebih besar dari sebelumnya
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4, ease: "easeInOut", delay: index * 0.1 }} // Durasi lebih singkat, animasi lebih halus
+              whileHover={{
+                scale: 1.50, // Tidak terlalu besar saat hover agar smooth
+                transition: { duration: 0.3, ease: "easeOut" }, // Durasi hover dipercepat dengan easing "easeOut"
+              }}
+              whileTap={{ scale: 0.95 }} // Sedikit pengecilan saat di-tap
               htmlFor={`${img.imgorg}`}
               key={img.imgorg}
               className="relative m-10 w-40 h-40 bg-white shadow-md rounded-lg overflow-hidden cursor-pointer transform transition duration-300 hover:scale-105 focus-within:scale-105"
             >
+
               <input
                 type="checkbox"
                 className="hidden peer"
@@ -207,7 +217,7 @@ export default function CardImages() {
               <div className="absolute inset-0 flex justify-center items-center bg-blue-500 bg-opacity-30 opacity-0 peer-checked:opacity-100 transition duration-300">
                 <span className="text-white font-bold text-lg">Selected</span>
               </div>
-            </label>
+            </motion.label>
           ))}
         </div>
       ) : (

@@ -93,11 +93,12 @@ const Upload = () => {
 
       <div className="">
         <motion.label
-          initial={{ opacity: 0, x: -100 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: index * 0.1 }} // Delay animasi tiap card agar berurutan
+          whileHover={{ scale: 1.1 }} // Animasi saat di-hover
           htmlFor="uploadFile"
-          className="hover:bg-gray-100 bg-white rounded-lg w-[300px] md:w-[400px] h-[250px] md:h-[250px] flex flex-col p-4 border border-blue-400 border-dashed transition-all duration-300 ease-in-out cursor-pointer relative"
+          className="hover:bg-gray-100 bg-white rounded-lg w-[300px] md:w-[400px] h-[250px] md:h-[250px] flex flex-col p-4 border border-gray-500 border-dashed transition-all duration-300 ease-in-out cursor-pointer relative"
         >
           <input
             type="file"

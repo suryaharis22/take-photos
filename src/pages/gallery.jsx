@@ -14,7 +14,9 @@ const Gallery = () => {
     const fetchImages = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL_NGROK}get_all_images`);
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL_NGROK}get_all_images`
+        );
         setLoading(false);
         setImages(response.data.all_images);
       } catch (err) {
@@ -40,19 +42,25 @@ const Gallery = () => {
         </motion.button>
       </div>
 
+      {/* card images */}
       <div className="flex flex-col items-center h-full bg-gray-100 overflow-auto p-4 rounded-lg shadow-md ">
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 w-full mb-40">
           {images.map((image, index) => (
-            <div
+            <motion.div
               key={index}
               className="relative w-full h-44 bg-blue-500 rounded-md overflow-hidden border-2 border-black"
+              // Animasi muncul saat card pertama kali dirender
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }} // Delay animasi tiap card agar berurutan
+              whileHover={{ scale: 1.1 }} // Animasi saat di-hover
             >
               <img
                 src={`${process.env.NEXT_PUBLIC_API_URL_NGROK}all_image/${image}`}
                 className="w-full h-full object-cover"
                 alt={`Image ${index + 1}`}
               />
-            </div>
+            </motion.div>
           ))}
         </div>
         {loading && <Loading />}

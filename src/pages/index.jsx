@@ -13,43 +13,73 @@ import Swal from "sweetalert2";
 const Start = () => {
   const router = useRouter();
   const [cameraError, setCameraError] = useState(null);
+  const [cameraAccess, setCameraAccess] = useState(false);
 
   useEffect(() => {
     localStorage.clear();
 
-    // Meminta izin akses kamera
-    navigator.mediaDevices
-      .getUserMedia({ video: true })
-      .then((stream) => {
-        // Lakukan sesuatu dengan stream kamera jika diinginkan
+    // Meminta izin akses kamera tanpa menyalakan kamera
+    navigator.permissions
+      .query({ name: 'camera' })
+      .then((permission) => {
+        if (permission.state === 'granted') {
+          setCameraAccess(true);
+        } else if (permission.state === 'prompt') {
+          // Meminta izin
+          navigator.mediaDevices
+            .getUserMedia({ video: true })
+            .then((stream) => {
+              // Tidak melakukan apa-apa dengan stream
+              stream.getTracks().forEach(track => track.stop());
+              setCameraAccess(true);
+            })
+            .catch((error) => {
+              console.error("Error accessing camera:", error);
+              setCameraError(
+                "Tidak dapat mengakses kamera. Pastikan izin diberikan atau kamera terhubung."
+              );
+            });
+        } else {
+          setCameraError(
+            "Tidak dapat mengakses kamera. Pastikan izin diberikan atau kamera terhubung."
+          );
+        }
       })
       .catch((error) => {
-        console.error("Error accessing camera:", error);
+        console.error("Error checking camera permissions:", error);
         setCameraError(
-          "Tidak dapat mengakses kamera. Pastikan izin diberikan atau kamera terhubung."
+          "Tidak dapat memeriksa izin kamera. Pastikan izin diberikan atau kamera terhubung."
         );
       });
   }, []);
 
   const handleScan = () => {
-    Swal.fire({
-      title: "Masukkan Nama Anda",
-      input: "text",
-      inputPlaceholder: "Nama",
-      showCancelButton: true,
-      confirmButtonText: "Submit",
-      preConfirm: (name) => {
-        if (!name) {
-          Swal.showValidationMessage("Nama tidak boleh kosong");
+    if (cameraAccess) {
+      Swal.fire({
+        title: "Masukkan Nama Anda",
+        input: "text",
+        inputPlaceholder: "Nama",
+        showCancelButton: true,
+        confirmButtonText: "Submit",
+        preConfirm: (name) => {
+          if (!name) {
+            Swal.showValidationMessage("Nama tidak boleh kosong");
+          }
+          return name;
+        },
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const name = result.value;
+          router.push(`/faceid/${name}`);
         }
-        return name;
-      },
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const name = result.value;
-        router.push(`/faceid/${name}`);
-      }
-    });
+      });
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Akses Kamera Ditolak',
+        text: 'Tidak dapat melanjutkan tanpa akses kamera.',
+      });
+    }
   };
 
   return (
@@ -58,7 +88,9 @@ const Start = () => {
         <motion.button
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.5, type: "spring", stiffness: 400, damping: 17 }}
+          whileHover={{ scale: 1.2 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => router.push("/gallery")}
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold p-2 rounded-lg"
         >
@@ -72,7 +104,9 @@ const Start = () => {
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.5, type: "spring", stiffness: 400, damping: 17 }}
+            whileHover={{ scale: 1.2 }}
+            whileTap={{ scale: 0.9 }}
           >
             <div className="flex flex-col items-center m-2 md:m-4">
               <button
