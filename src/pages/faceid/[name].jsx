@@ -50,7 +50,7 @@ function FaceId() {
         noseX > boxX && noseX < boxX + 200 && noseY > boxY && noseY < boxY + 200
       );
     }
-  }
+  };
 
   useEffect(() => {
     if (dataFace) validateFaceData();
