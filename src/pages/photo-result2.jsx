@@ -104,7 +104,7 @@ const CardImages = () => {
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          onClick={() => router.push("/home2")}
+          onClick={() => router.push("/")}
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold p-2 rounded-lg"
         >
           <IconHome className="w-10 h-10" />

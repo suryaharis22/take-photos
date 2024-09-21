@@ -10,7 +10,7 @@ import { useRouter } from "next/router";
 import { triggerTraining } from "@/utils/trigerTrening";
 import Loading from "@/components/Loading";
 
-function App() {
+function FaceId() {
   const router = useRouter();
   const NameUser = router.query.name;
 
@@ -32,7 +32,7 @@ function App() {
         // Menghitung jarak Euclidean antara bottomRight dan topLeft
         const distance = Math.sqrt(
           Math.pow(bottomRight[0] - topLeft[0], 2) +
-            Math.pow(bottomRight[1] - topLeft[1], 2)
+          Math.pow(bottomRight[1] - topLeft[1], 2)
         );
 
         const distanceFace = Math.round(distance);
@@ -147,7 +147,7 @@ function App() {
     }
 
     // Create a Blob from the binary data
-    const blob = new Blob([bytes], { type: "image/jpeg" }); // Use the appropriate MIME type
+    const blob = new Blob([bytes], { type: "image/jpeg" }); // Use the FaceIdropriate MIME type
     const uniqueName = `${Date.now()}${Math.floor(Math.random() * 10000)}.jpeg`;
 
     let formData = new FormData();
@@ -157,7 +157,7 @@ function App() {
     try {
       // Endpoint untuk meng-upload
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL_NGROK}/upload_masters`,
+        `${process.env.NEXT_PUBLIC_API_URL_NGROK}upload_masters`,
         formData,
         {
           headers: {
@@ -329,4 +329,4 @@ function App() {
   );
 }
 
-export default App;
+export default FaceId;
