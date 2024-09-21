@@ -138,6 +138,7 @@ const CardImages = () => {
                 onChange={() => handleCheckboxChange(photo)}
               />
               <img
+                className="w-full h-full object-cover"
                 src={`${process.env.NEXT_PUBLIC_API_URL_NGROK}/matched_image/${photo}`}
                 alt={`${process.env.NEXT_PUBLIC_API_URL_NGROK}/matched_image/${photo}`}
               />

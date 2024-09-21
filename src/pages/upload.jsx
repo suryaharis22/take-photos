@@ -56,7 +56,7 @@ const Upload = () => {
         Swal.fire({
           icon: "error",
           title: `Failed`,
-          text: `Error: ${err.response.data.error}`,
+          text: `upload failed, please try again.`,
           showConfirmButton: true,
           //   timer: 1500,
         });
