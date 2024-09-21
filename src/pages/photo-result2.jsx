@@ -11,7 +11,7 @@ const CardImages = () => {
   const router = useRouter();
   const [selectedImages, setSelectedImages] = useState([]);
   const [photos, setPhotos] = useState([]);
-  const { matches } = router.query;
+  // const { matches } = router.query;
   const [paymentInfo, setPaymentInfo] = useState({
     cardNumber: "",
     expiryDate: "",
@@ -19,14 +19,17 @@ const CardImages = () => {
   });
 
   useEffect(() => {
-    if (matches) {
-      // Menghapus karakter '/' dari matches
-      const cleanMatches = matches.replace(/\//g, '');
-      const matchesArray = cleanMatches.split(',');
-      setPhotos(matchesArray);
-      console.log(matchesArray);
-    }
-  }, [matches]);
+    axios
+      .get(`${process.env.NEXT_PUBLIC_API_URL_NGROK}get_matched_images`)
+      .then((res) => {
+        setPhotos(res.data.matched_images);
+        // setLoading(false);
+      })
+      .catch((err) => {
+        setPhotos([]);
+        // setLoading(false);
+      });
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -135,8 +138,8 @@ const CardImages = () => {
                 onChange={() => handleCheckboxChange(photo)}
               />
               <img
-                src={`https://faceid2.panorasnap.com/images/${photo}`}
-                alt={`https://faceid2.panorasnap.com/images/${photo}`}
+                src={`${process.env.NEXT_PUBLIC_API_URL_NGROK}/matched_image/${photo}`}
+                alt={`${process.env.NEXT_PUBLIC_API_URL_NGROK}/matched_image/${photo}`}
               />
               {/* <Watermark imageUrl={`${process.env.NEXT_PUBLIC_API_URL_NGROK}matched_image/${photo}`} /> */}
 

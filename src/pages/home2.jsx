@@ -1,4 +1,9 @@
-import { IconPhoto, IconPower, IconUpload, IconUserScan } from "@tabler/icons-react";
+import {
+  IconPhoto,
+  IconPower,
+  IconUpload,
+  IconUserScan,
+} from "@tabler/icons-react";
 import axios from "axios";
 import { motion } from "framer-motion";
 import { useRouter } from "next/router";
@@ -28,21 +33,21 @@ const Start = () => {
 
   const handleScan = () => {
     Swal.fire({
-      title: 'Masukkan Nama Anda',
-      input: 'text',
-      inputPlaceholder: 'Nama',
+      title: "Masukkan Nama Anda",
+      input: "text",
+      inputPlaceholder: "Nama",
       showCancelButton: true,
-      confirmButtonText: 'Submit',
+      confirmButtonText: "Submit",
       preConfirm: (name) => {
         if (!name) {
-          Swal.showValidationMessage('Nama tidak boleh kosong');
+          Swal.showValidationMessage("Nama tidak boleh kosong");
         }
         return name;
-      }
+      },
     }).then((result) => {
       if (result.isConfirmed) {
         const name = result.value;
-        router.push(`/faceid/${encodeURIComponent(name)}`);
+        router.push(`/face-detection1/${encodeURIComponent(name)}`);
       }
     });
   };
@@ -55,7 +60,8 @@ const Start = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
           onClick={() => router.push("/gallery")}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold p-2 rounded-lg">
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold p-2 rounded-lg"
+        >
           <IconPhoto className="w-10 h-10" />
         </motion.button>
       </div>

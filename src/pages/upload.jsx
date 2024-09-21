@@ -37,7 +37,7 @@ const Upload = () => {
     await Promise.all(promises);
 
     axios
-      .post(`${process.env.NEXT_PUBLIC_API_URL_NGROK}upload_images`, formData, {
+      .post(`${process.env.NEXT_PUBLIC_API_URL_NGROK}upload_assets`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
