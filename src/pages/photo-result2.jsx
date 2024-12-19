@@ -9,8 +9,8 @@ import { IconCash, IconDownload, IconHome } from "@tabler/icons-react";
 import Image from "next/image";
 import Loading from "@/components/Loading";
 
-const baseUrl = 'https://faceid.panorasnap.com/worker/matched_image/';
-const logoUrl = '/logo.png';
+const baseUrl = `${process.env.NEXT_PUBLIC_API_URL_NGROK}/matched_image/`;
+const logoUrl = "/logo.png";
 
 export default function CardImages() {
   const router = useRouter();
@@ -28,22 +28,26 @@ export default function CardImages() {
     const fetchImages = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL_NGROK}get_matched_images`);
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL_NGROK}get_matched_images`
+        );
         const imageUrls = response.data.matched_images;
         setPhotos(imageUrls);
 
-        const imgArray = await Promise.all(imageUrls.map(async (img) => {
-          const imgSrc = `${baseUrl}${img}`;
-          const watermarkedImg = await createWatermarkedImage(imgSrc);
-          return { imgwm: watermarkedImg, imgorg: img };
-          // return watermarkedImg;
-        }));
+        const imgArray = await Promise.all(
+          imageUrls.map(async (img) => {
+            const imgSrc = `${baseUrl}${img}`;
+            const watermarkedImg = await createWatermarkedImage(imgSrc);
+            return { imgwm: watermarkedImg, imgorg: img };
+            // return watermarkedImg;
+          })
+        );
         setWatermarkedImages(imgArray);
         setLoading(false);
       } catch (error) {
         setLoading(false);
-        console.error('Error fetching images:', error);
-        Swal.fire('Error', 'Failed to load images.', 'error');
+        console.error("Error fetching images:", error);
+        Swal.fire("Error", "Failed to load images.", "error");
       }
     };
 
@@ -53,12 +57,12 @@ export default function CardImages() {
   const createWatermarkedImage = (src) => {
     return new Promise((resolve) => {
       const img = new window.Image();
-      img.crossOrigin = 'Anonymous';
+      img.crossOrigin = "Anonymous";
       img.src = src;
 
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
 
         canvas.width = img.width;
         canvas.height = img.height;
@@ -85,7 +89,7 @@ export default function CardImages() {
       };
 
       img.onerror = () => {
-        console.error('Error loading image:', src);
+        console.error("Error loading image:", src);
         resolve(src); // Kembalikan gambar asli jika gagal
       };
     });
@@ -190,9 +194,13 @@ export default function CardImages() {
             <motion.label
               initial={{ opacity: 0, scale: 0.9 }} // Sedikit lebih besar dari sebelumnya
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4, ease: "easeInOut", delay: index * 0.1 }} // Durasi lebih singkat, animasi lebih halus
+              transition={{
+                duration: 0.4,
+                ease: "easeInOut",
+                delay: index * 0.1,
+              }} // Durasi lebih singkat, animasi lebih halus
               whileHover={{
-                scale: 1.50, // Tidak terlalu besar saat hover agar smooth
+                scale: 1.5, // Tidak terlalu besar saat hover agar smooth
                 transition: { duration: 0.3, ease: "easeOut" }, // Durasi hover dipercepat dengan easing "easeOut"
               }}
               whileTap={{ scale: 0.95 }} // Sedikit pengecilan saat di-tap
@@ -200,7 +208,6 @@ export default function CardImages() {
               key={img.imgorg}
               className="relative m-10 w-40 h-40 bg-white shadow-md rounded-lg overflow-hidden cursor-pointer transform transition duration-300 hover:scale-105 focus-within:scale-105"
             >
-
               <input
                 type="checkbox"
                 className="hidden peer"
